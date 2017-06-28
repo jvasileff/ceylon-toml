@@ -5,7 +5,7 @@ import ceylon.collection {
 shared class TomlArray satisfies MutableList<TomlValue> {
     ArrayList<TomlValue> delegate;
 
-    shared new ({TomlValue*} elements) {
+    shared new ({TomlValue*} elements = []) {
         delegate = ArrayList { *elements };
     }
 
