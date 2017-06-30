@@ -2,19 +2,19 @@ import ceylon.collection {
     MutableMap, HashMap
 }
 
-shared class TomlTable() satisfies MutableMap<String, TomlValue> {
-    value delegate = HashMap<String, TomlValue>();
+shared class TomlTable satisfies MutableMap<String, TomlValue> {
+    HashMap<String, TomlValue> delegate;
 
-    remove(String key) => delegate.remove(key);
-    put(String key, TomlValue item) => delegate.put(key, item);
-    defines(Object key) => delegate.defines(key);
-    get(Object key) => delegate.get(key);
+    shared new ({<String->TomlValue>*} entries = []) {
+        delegate = HashMap<String, TomlValue> { *entries };
+    }
 
-    iterator() => delegate.iterator();
-    clone() => delegate.clone();
-    clear() => clear();
-    equals(Object other) => delegate.equals(other);
-    hash => delegate.hash;
+    new create(HashMap<String, TomlValue> delegate) {
+        this.delegate = delegate;
+    }
+
+    shared actual TomlTable clone()
+        =>  TomlTable.create(delegate.clone());
 
     "Returns a [[TomlTable]]."
     throws {
@@ -169,4 +169,14 @@ shared class TomlTable() satisfies MutableMap<String, TomlValue> {
         assert (is String? val = get(key));
         return val;
     }
+
+    remove(String key) => delegate.remove(key);
+    put(String key, TomlValue item) => delegate.put(key, item);
+    defines(Object key) => delegate.defines(key);
+    get(Object key) => delegate.get(key);
+
+    iterator() => delegate.iterator();
+    clear() => clear();
+    equals(Object other) => delegate.equals(other);
+    hash => delegate.hash;
 }

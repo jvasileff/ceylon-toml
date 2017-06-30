@@ -2,8 +2,19 @@ import ceylon.collection {
     MutableList, ArrayList
 }
 
-shared class TomlArray() satisfies MutableList<TomlValue> {
-    value delegate = ArrayList<TomlValue>();
+shared class TomlArray satisfies MutableList<TomlValue> {
+    ArrayList<TomlValue> delegate;
+
+    shared new ({TomlValue*} elements) {
+        delegate = ArrayList { *elements };
+    }
+
+    new create(ArrayList<TomlValue> delegate) {
+        this.delegate = delegate;
+    }
+
+    shared actual TomlArray clone()
+        =>  create(delegate.clone());
 
     lastIndex => delegate.lastIndex;
     set(Integer index, TomlValue element) => delegate.set(index, element);
@@ -13,7 +24,6 @@ shared class TomlArray() satisfies MutableList<TomlValue> {
     delete(Integer index) => delegate.delete(index);
 
     iterator() => delegate.iterator();
-    clone() => delegate.clone();
     clear() => clear();
     equals(Object other) => delegate.equals(other);
     hash => delegate.hash;
