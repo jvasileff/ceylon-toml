@@ -1,1 +1,3 @@
-shared alias TomlValue => TomlTable | TomlArray | String | Boolean | Integer | Float;
+shared alias TomlValue
+    =>  TomlTable | TomlArray | TomlDateTime
+            | Boolean | Float | Integer | String;
