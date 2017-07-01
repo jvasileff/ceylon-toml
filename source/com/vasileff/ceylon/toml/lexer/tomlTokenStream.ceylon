@@ -53,6 +53,19 @@ shared {Token*} tomlTokenStream({Character*} characters) => object
                 return t.newToken(comment);
             }
             case ('"') {
+                if (t.accept('"')) {
+                    // empty string or start of multiline string
+                    if (t.accept('"')) {
+                        while (true) {
+                            t.acceptRun(not('"'.equals));
+                            if (t.accept('"') && t.accept('"') && t.accept('"')
+                                    || !t.peek() exists) {
+                                return t.newToken(multilineBasicString);
+                            }
+                        }
+                    }
+                    return t.newToken(basicString);
+                }
                 // let parser complain about non-terminated strings
                 while (t.acceptRun(isBasicUnescapedCharacter) > 0
                         || acceptEscape()) {}
@@ -60,10 +73,23 @@ shared {Token*} tomlTokenStream({Character*} characters) => object
                 return t.newToken(basicString);
             }
             case ('\'') {
+                if (t.accept('\'')) {
+                    // empty string or start of multiline string
+                    if (t.accept('\'')) {
+                        while (true) {
+                            t.acceptRun(not('\''.equals));
+                            if (t.accept('\'') && t.accept('\'') && t.accept('\'')
+                                    || !t.peek() exists) {
+                                return t.newToken(multilineLiteralString);
+                            }
+                        }
+                    }
+                    return t.newToken(literalString);
+                }
                 // let parser complain about non-terminated strings
                 t.acceptRun(isLiteralCharacter);
                 t.accept('\'');
-                return t.newToken(basicString);
+                return t.newToken(literalString);
             }
             else if (c == '\r' || c == '\n') {
                 t.acceptRun("\r\n");
@@ -77,9 +103,6 @@ shared {Token*} tomlTokenStream({Character*} characters) => object
                 t.acceptRun(isWordCharacter);
                 return t.newToken(word);
             }
-
-            // multilineBasicString """...
-            // multilineLiteralString '''...
 
             return t.newToken(error);
         }

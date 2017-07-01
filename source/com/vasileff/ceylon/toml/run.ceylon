@@ -98,7 +98,19 @@ shared void run() {
 
             [[first-Table.someArray]]
             val2 = "y"
-         """;
+
+            [multiline-literal]
+            single = '''some text'''
+            lines2 = '''line 1
+                        line2'''
+
+            [multilinetests]
+         """ +
+           "
+            single = \"\"\"some text\"\"\"
+            lines2 = \"\"\"line1
+                        line2\"\"\" \
+            ";
     });
     print("");
     print("result: ``result``");

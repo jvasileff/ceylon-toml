@@ -126,12 +126,31 @@ class Parser({Token*} tokenStream) {
     }
 
      """
+            MultilineBasicString
+     """
+    String parseMultilineBasicString() {
+        // TODO validate and unescape
+        value token = consume(multilineBasicString, "expected a multi-line basic string");
+        return String(token.text.skip(3).exceptLast.exceptLast.exceptLast);
+    }
+
+     """
             LiteralString
      """
     String parseLiteralString() {
         // TODO validate
         value token = consume(literalString, "expected a literal string");
         return String(token.text.rest.exceptLast);
+    }
+
+     """
+            MultilineLiteralString
+     """
+    String parseMultilineLiteralString() {
+        // TODO validate and unescape
+        value token = consume(multilineLiteralString,
+            "expected a multi-line literal string");
+        return String(token.text.skip(3).exceptLast.exceptLast.exceptLast);
     }
 
      """
@@ -187,7 +206,9 @@ class Parser({Token*} tokenStream) {
         value token = peek();
         switch (type = token.type)
         case (basicString) { return parseBasicString(); }
+        case (multilineBasicString) { return parseMultilineBasicString(); }
         case (literalString) { return parseLiteralString(); }
+        case (multilineLiteralString) { return parseMultilineLiteralString(); }
         case (openBracket) { return parseTomlArray(); }
         case (openBrace) { return parseInlineTable(); }
         case (word) {
