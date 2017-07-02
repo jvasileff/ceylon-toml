@@ -6,7 +6,7 @@ import com.vasileff.ceylon.toml.parser {
 }
 
 shared void run() {
-    value result = parse(tomlTokenStream {
+    value [result, *errors] = parse(tomlTokenStream {
          """
             # testing
             key1 = "someValue1" # x y
@@ -113,5 +113,12 @@ shared void run() {
             ";
     });
     print("");
+    if (!errors.empty) {
+        printAll {
+            separator = "\n";
+            errors.map((e) => "error: ``e.message``");
+        };
+        print("\n``errors.size`` errors\n");
+    }
     print("result: ``result``");
 }

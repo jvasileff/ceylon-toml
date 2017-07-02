@@ -6,6 +6,7 @@ abstract class BaseParser({Token*} tokenStream) {
     value tokens = tokenStream.filter((t) => !t.type == whitespace).iterator();
     value eofToken = Token(eof, "", -1, -1, -1);
     variable Token | Finished | Null nextToken = null;
+    shared variable [ParseException*] errors = [];
 
     shared String formatToken(Token token)
         =>  if (token.type == newline) then "newline"
@@ -24,8 +25,9 @@ abstract class BaseParser({Token*} tokenStream) {
             sb.append(description);
         }
         sb.append(" at ``token.line``:``token.column``");
-        print("error: ``sb.string``");
-        return ParseException(token, sb.string);
+        value exception = ParseException(token, sb.string);
+        errors = errors.withTrailing(exception);
+        return exception;
     }
 
     shared Token peek() {

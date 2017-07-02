@@ -8,7 +8,7 @@ import ceylon.collection {
     IdentitySet
 }
 
-shared TomlTable parse({Token*} tokenStream)
+shared [TomlTable, ParseException*] parse({Token*} tokenStream)
     =>  Parser(tokenStream).parse();
 
 class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
@@ -31,7 +31,7 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
         }
     }
 
-    shared TomlTable parse() {
+    shared [TomlTable, ParseException*] parse() {
         while (!check(eof)) {
             try {
                 parseLine();
@@ -40,7 +40,7 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
                 acceptRun(not([newline, eof].contains));
             }
         }
-        return result;
+        return [result, *errors];
     }
 
      """
