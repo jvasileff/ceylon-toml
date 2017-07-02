@@ -1,10 +1,3 @@
-import com.vasileff.ceylon.toml.lexer {
-    tomlTokenStream
-}
-import com.vasileff.ceylon.toml.parser {
-    parse
-}
-
 shared void run() {
     value result = parseToml(
          """

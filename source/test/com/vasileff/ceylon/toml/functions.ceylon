@@ -1,5 +1,5 @@
 import ceylon.test {
-    assertEquals, assertTrue
+    assertEquals
 }
 import com.vasileff.ceylon.toml {
     parseToml, TomlParseException
