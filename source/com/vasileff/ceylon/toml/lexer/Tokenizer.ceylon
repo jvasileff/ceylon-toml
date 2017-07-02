@@ -66,7 +66,7 @@ shared class Tokenizer({Character*} input,
         }
     }
 
-    shared Integer acceptRun(String | Boolean(Character) valid) {
+    shared Integer acceptRun(String | Character | Boolean(Character) valid) {
         variable value count = 0;
         while (accept(valid)) {
             count++;

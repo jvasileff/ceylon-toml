@@ -34,8 +34,12 @@ abstract class BaseParser({Token*} tokenStream) {
         return if (is Token t) then t else eofToken;
     }
 
-    shared Boolean check(TokenType+ type)
-        =>  peek().type in type;
+    shared Boolean check(Boolean(TokenType) | TokenType+ type)
+        =>  let (p = peek().type)
+            type.any((type)
+                =>  if (is TokenType type)
+                    then p == type
+                    else type(p));
 
     shared Token advance() {
         value result = peek();
@@ -43,7 +47,7 @@ abstract class BaseParser({Token*} tokenStream) {
         return result;
     }
 
-    shared Boolean accept(TokenType+ type) {
+    shared Boolean accept(Boolean(TokenType) | TokenType+ type) {
         if (check(*type)) {
             advance();
             return true;
@@ -51,7 +55,7 @@ abstract class BaseParser({Token*} tokenStream) {
         return false;
     }
 
-    shared [Token*] acceptRun(TokenType+ type) {
+    shared [Token*] acceptRun(Boolean(TokenType) | TokenType+ type) {
         variable {Token*} result = [];
         while (check(*type)) {
             result = result.follow(advance());
@@ -59,7 +63,7 @@ abstract class BaseParser({Token*} tokenStream) {
         return result.sequence().reversed;
     }
 
-    shared Token consume(TokenType type, String errorDescription) {
+    shared Token consume(Boolean(TokenType) | TokenType type, String errorDescription) {
         if (check(type)) {
             return advance();
         }

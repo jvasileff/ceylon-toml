@@ -37,9 +37,7 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
                 parseLine();
             }
             catch (ParseException e) {
-                while (!peek().type is \Inewline | \Ieof) {
-                    advance();
-                }
+                acceptRun(not([newline, eof].contains));
             }
         }
         return result;
