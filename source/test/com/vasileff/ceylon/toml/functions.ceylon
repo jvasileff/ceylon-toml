@@ -1,0 +1,27 @@
+import ceylon.test {
+    assertEquals, assertTrue
+}
+import com.vasileff.ceylon.toml {
+    parseToml, TomlParseException
+}
+
+void checkValue(
+        String input,
+        String expected,
+        Boolean withError = false,
+        Boolean eofAfter = true) {
+
+    value suffix = eofAfter then "" else "\n";
+    value result = parseToml("key = ``input````suffix``");
+
+    if (withError) {
+        "parse error expected"
+        assert (is TomlParseException result);
+        assertEquals(result.partialResult.get("key"), expected);
+    }
+    else {
+        "no parse error expected"
+        assert (!is TomlParseException result);
+        assertEquals(result.get("key"), expected);
+    }
+}
