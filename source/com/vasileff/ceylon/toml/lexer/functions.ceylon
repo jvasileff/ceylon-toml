@@ -17,6 +17,10 @@ Boolean isLiteralCharacter(Character c)
         || c in '\{#28}'..'\{#10ffff}'
         || c == '\t';
 
+
+Boolean isDigit(Character c)
+    =>     c in '0'..'9';
+
 Boolean isHexDigit(Character c)
     =>     c in '0'..'9'
         || c in 'A'..'F';

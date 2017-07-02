@@ -11,72 +11,10 @@ import ceylon.collection {
 shared TomlTable parse({Token*} tokenStream)
     =>  Parser(tokenStream).parse();
 
-class Parser({Token*} tokenStream) {
+class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
     value result = TomlTable();
     variable value currentTable = result;
     value createdButNotDefined = IdentitySet<TomlTable>();
-    value tokens = tokenStream.filter((t) => !t.type == whitespace).iterator();
-    value eofToken = Token(eof, "", -1, -1, -1);
-    variable Token|Finished|Null nextToken = null;
-
-    function formatToken(Token token)
-        =>  if (token.type == newline) then "newline"
-            else if (token.type == newline) then "eof"
-            else if (token.text.shorterThan(10)) then "'``token.text``'"
-            else "'``token.text[...10]``...'";
-
-    function error(Token token, String? description = null) {
-        // TODO this is no good for errors like:
-        // error: unexpected '['; table [first-Table] has already been defined at 75:1
-        value sb = StringBuilder();
-        sb.append("unexpected ");
-        sb.append(formatToken(token));
-        if (exists description) {
-            sb.append("; ");
-            sb.append(description);
-        }
-        sb.append(" at ``token.line``:``token.column``");
-        print("error: ``sb.string``");
-        return ParseException(token, sb.string);
-    }
-
-    function peek() {
-        value t = nextToken else tokens.next();
-        nextToken = t;
-        return if (is Token t) then t else eofToken;
-    }
-
-    function check(TokenType+ type)
-        =>  peek().type in type;
-
-    function advance() {
-        value result = peek();
-        nextToken = null;
-        return result;
-    }
-
-    function accept(TokenType+ type) {
-        if (check(*type)) {
-            advance();
-            return true;
-        }
-        return false;
-    }
-
-    function acceptRun(TokenType+ type) {
-        variable {Token*} result = [];
-        while (check(*type)) {
-            result = result.follow(advance());
-        }
-        return result.sequence().reversed;
-    }
-
-    function consume(TokenType type, String errorDescription) {
-        if (check(type)) {
-            return advance();
-        }
-        throw error(peek(), errorDescription);
-    }
 
     void validateBareKey(Token token, String key) {
         function validChar(Character c)
@@ -178,6 +116,7 @@ class Parser({Token*} tokenStream) {
             if (!accept(comma)) {
                 break;
             }
+            acceptRun(comment, newline);
         }
         accept(comma); // trailing comma ok
         acceptRun(comment, newline);
@@ -221,8 +160,14 @@ class Parser({Token*} tokenStream) {
                 return false;
             }
             else {
-                // return parseNumberOrDate();
-                throw error(token, "numbers and dates not yet supported");
+                advance();
+                return parseTomlValue(
+                    tomlValueTokenStream(
+                        token.text,
+                        token.position,
+                        token.line,
+                        token.column)
+                );
             }
         }
         else {

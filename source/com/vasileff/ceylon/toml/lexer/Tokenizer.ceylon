@@ -1,14 +1,18 @@
-shared class Tokenizer({Character*} input) {
+shared class Tokenizer({Character*} input,
+        Integer offsetPosition = 0,
+        Integer offsetLine = 1,
+        Integer offsetColumn = 1) {
+
     value builder = StringBuilder();
     value iterator = PeekingIterator(input.iterator());
 
-    variable Integer position = 0;
-    variable Integer line = 1;
-    variable Integer column = 1;
+    variable Integer position = offsetPosition;
+    variable Integer line = offsetLine;
+    variable Integer column = offsetColumn;
 
-    shared variable Integer startPosition = 0;
-    shared variable Integer startLine = 1;
-    shared variable Integer startColumn = 1;
+    shared variable Integer startPosition = position;
+    shared variable Integer startLine = line;
+    shared variable Integer startColumn = column;
 
     shared Character? advance() {
         if (!is Finished c = iterator.next()) {
