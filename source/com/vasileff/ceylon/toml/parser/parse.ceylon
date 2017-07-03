@@ -56,27 +56,27 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
             BasicString
      """
     String parseBasicString() {
-        // TODO validate and unescape
         value token = consume(basicString, "expected a basic string");
-        return String(token.text.rest.exceptLast);
+        assert (exists s = token.processedText);
+        return String(s);
     }
 
      """
             MultilineBasicString
      """
     String parseMultilineBasicString() {
-        // TODO validate and unescape
         value token = consume(multilineBasicString, "expected a multi-line basic string");
-        return String(token.text.skip(3).exceptLast.exceptLast.exceptLast);
+        assert (exists s = token.processedText);
+        return String(s);
     }
 
      """
             LiteralString
      """
     String parseLiteralString() {
-        // TODO validate
         value token = consume(literalString, "expected a literal string");
-        return String(token.text.rest.exceptLast);
+        assert (exists s = token.processedText);
+        return String(s);
     }
 
      """
@@ -86,7 +86,8 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
         // TODO validate and unescape
         value token = consume(multilineLiteralString,
             "expected a multi-line literal string");
-        return String(token.text.skip(3).exceptLast.exceptLast.exceptLast);
+        assert (exists s = token.processedText);
+        return String(s);
     }
 
      """
@@ -201,9 +202,9 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
                         else if (string == ".")
                         then Token(period, string,
                                     // FIXME track exact position
-                                   token.position, token.line, token.column)
+                                   token.position, token.line, token.column, [])
                         else Token(word, string,
-                                   token.position, token.line, token.column))
+                                   token.position, token.line, token.column, []))
                 .coalesced;
         }
 

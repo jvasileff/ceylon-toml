@@ -1,5 +1,5 @@
 import ceylon.test {
-    test, ignore, assertEquals, assertTrue
+    test, assertEquals, assertTrue
 }
 import com.vasileff.ceylon.toml {
     parseToml, TomlParseException
@@ -14,7 +14,6 @@ shared object mlLiteralStrings {
         };
     }
 
-    ignore
     shared test void unterminated() {
         assertTrue {
             parseToml("""key = '''abc""") is TomlParseException;
@@ -66,7 +65,6 @@ shared object mlLiteralStrings {
         };
     }
 
-    ignore
     shared test void twoLineSkipFirst() {
         checkValue {
             input = "'''\nabc\ndef'''";
@@ -88,7 +86,6 @@ shared object mlLiteralStrings {
         };
     }
 
-    ignore
     shared test void threeLineSkipFirst() {
         checkValue {
             input = "'''\n\nabc\ndef'''";

@@ -1,5 +1,5 @@
 import ceylon.test {
-    test, ignore, assertEquals, assertTrue
+    test, assertEquals, assertTrue
 }
 import com.vasileff.ceylon.toml {
     parseToml, TomlParseException
@@ -13,7 +13,6 @@ shared object literalStrings {
         };
     }
 
-    ignore
     shared test void unterminated() {
         assertTrue {
             parseToml("""key = 'abc""") is TomlParseException;
@@ -28,7 +27,6 @@ shared object literalStrings {
         };
     }
 
-    ignore
     shared test void unterminatedLineRecover() {
         value input = """key = 'abc
                          key2 = 'def' """;

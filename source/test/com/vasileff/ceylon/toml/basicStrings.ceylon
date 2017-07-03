@@ -1,5 +1,5 @@
 import ceylon.test {
-    test, ignore, assertEquals, assertTrue
+    test, assertEquals, assertTrue
 }
 import com.vasileff.ceylon.toml {
     parseToml, TomlParseException
@@ -9,7 +9,6 @@ shared object basicStrings {
     shared test void empty()
         =>  checkValue("""""""", "");
 
-    ignore
     shared test void unterminated() {
         assertTrue {
             parseToml("""key = "abc""") is TomlParseException;
@@ -24,7 +23,6 @@ shared object basicStrings {
         };
     }
 
-    ignore
     shared test void unterminatedLineRecover() {
         checkValue {
             input = """"abc
@@ -42,7 +40,6 @@ shared object basicStrings {
         };
     }
 
-    ignore
     shared test void unescapes() {
         checkValue {
             input = """"\b\t\n\f\r\"\\" """;
@@ -50,16 +47,14 @@ shared object basicStrings {
         };
     }
 
-    ignore
     shared test void unescapeError() {
         checkValue {
             input = """"\xhello" """;
-            expected = "xhello";
+            expected = "\\xhello";
             withError = true;
         };
     }
 
-    ignore
     shared test void unicode4digit() {
         checkValue {
             input = """"-\u0023\u0024-" """;
@@ -67,7 +62,6 @@ shared object basicStrings {
         };
     }
 
-    ignore
     shared test void unicode8digit() {
         checkValue {
             input = """"-\U0001D419\U0001D419-" """;
@@ -75,7 +69,6 @@ shared object basicStrings {
         };
     }
 
-    ignore
     shared test void unicode4digitLengthErrors() {
         assertTrue {
             parseToml("""key = "\u023 " """) is TomlParseException;
@@ -96,7 +89,6 @@ shared object basicStrings {
         };
     }
 
-    ignore
     shared test void unicode8digitLengthErrors() {
         assertTrue {
             parseToml("""key = "\U001D419 " """) is TomlParseException;
@@ -117,10 +109,9 @@ shared object basicStrings {
         };
     }
 
-    ignore
     shared test void unicodeBadCodePoint() {
         assertTrue {
-            parseToml("""key = "\U#00110000" """) is TomlParseException;
+            parseToml("""key = "\U00110000" """) is TomlParseException;
         };
     }
 }

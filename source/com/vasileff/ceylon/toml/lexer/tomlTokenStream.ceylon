@@ -5,20 +5,6 @@ shared {Token*} tomlTokenStream({Character*} characters) => object
         value t = Tokenizer(characters);
         variable value eofEmitted = false;
 
-        function acceptEscape() {
-            if (!t.accept('\\')) {
-                return false;
-            }
-            // let parser complain about bad escapes
-            if (t.accept("uU")) {
-                t.acceptRun(isHexDigit);
-            }
-            else {
-                t.accept(not("\r\n".contains));
-            }
-            return true;
-        }
-
         shared actual Token | Finished next() {
             if (eofEmitted) {
                 return finished;
@@ -56,40 +42,31 @@ shared {Token*} tomlTokenStream({Character*} characters) => object
                 if (t.accept('"')) {
                     // empty string or start of multiline string
                     if (t.accept('"')) {
-                        while (true) {
-                            t.acceptRun(not('"'.equals));
-                            if (t.accept('"') && t.accept('"') && t.accept('"')
-                                    || !t.peek() exists) {
-                                return t.newToken(multilineBasicString);
-                            }
-                        }
+                        // multi-line
+                        value unescaped = acceptStringContent(false, true);
+                        return t.newToken(multilineBasicString, unescaped);
                     }
-                    return t.newToken(basicString);
+                    // empty
+                    return t.newToken(basicString, "");
                 }
-                // let parser complain about non-terminated strings
-                while (t.acceptRun(isBasicUnescapedCharacter) > 0
-                        || acceptEscape()) {}
-                t.accept('"');
-                return t.newToken(basicString);
+                // single-line
+                value unescaped = acceptStringContent(false, false);
+                return t.newToken(basicString, unescaped);
             }
             case ('\'') {
                 if (t.accept('\'')) {
                     // empty string or start of multiline string
                     if (t.accept('\'')) {
-                        while (true) {
-                            t.acceptRun(not('\''.equals));
-                            if (t.accept('\'') && t.accept('\'') && t.accept('\'')
-                                    || !t.peek() exists) {
-                                return t.newToken(multilineLiteralString);
-                            }
-                        }
+                        //  multi-line
+                        value unescaped = acceptStringContent(true, true);
+                        return t.newToken(multilineLiteralString, unescaped);
                     }
-                    return t.newToken(literalString);
+                    // empty
+                    return t.newToken(literalString, "");
                 }
-                // let parser complain about non-terminated strings
-                t.acceptRun(isLiteralCharacter);
-                t.accept('\'');
-                return t.newToken(literalString);
+                // single-line
+                value unescaped = acceptStringContent(true, false);
+                return t.newToken(literalString, unescaped);
             }
             else if (c == '\r' || c == '\n') {
                 t.acceptRun("\r\n");
@@ -105,6 +82,90 @@ shared {Token*} tomlTokenStream({Character*} characters) => object
             }
 
             return t.newToken(error);
+        }
+
+        String acceptStringContent(Boolean literal, Boolean multiLine) {
+            value sb = StringBuilder();
+            value quoteChar = literal then '\'' else '"';
+            variable value lastWasSlash = false;
+            if (multiLine, exists c = t.peek(), c in "\r\n") {
+                // ignore immediate newline
+                t.accept('\r');
+                t.accept('\n');
+            }
+            while (exists c = t.peek()) {
+                if (!multiLine && c in "\r\n") {
+                    break;
+                }
+                else if (lastWasSlash) {
+                    lastWasSlash = false;
+                    switch (c)
+                    case ('b') { t.advance(); sb.appendCharacter('\b'); }
+                    case ('t') { t.advance(); sb.appendCharacter('\t'); }
+                    case ('n') { t.advance(); sb.appendCharacter('\n'); }
+                    case ('f') { t.advance(); sb.appendCharacter('\f'); }
+                    case ('r') { t.advance(); sb.appendCharacter('\r'); }
+                    case ('"') { t.advance(); sb.appendCharacter('"'); }
+                    case ('\\') { t.advance(); sb.appendCharacter('\\'); }
+                    case ('u' | 'U') {
+                        t.advance();
+                        value expected = c == 'u' then 4 else 8;
+                        value digits = t.read(isHexDigit, expected);
+                        if (digits.size != expected) {
+                            t.error("``expected`` hex digits expected but only \
+                                     found ``digits.size``");
+                        }
+                        else {
+                            assert (is Integer int = Integer.parse(String(digits), 16));
+                            try {
+                                sb.appendCharacter(int.character);
+                            }
+                            catch (OverflowException e) {
+                                t.error("invalid codepoint");
+                            }
+                        }
+                    }
+                    else {
+                        // don't advance; reprocess character on next iteration
+                        t.error("invalid escape character");
+                        sb.appendCharacter('\\');
+                    }
+                }
+                else if (c == quoteChar) {
+                    t.advance();
+                    if (!multiLine) {
+                        return sb.string;
+                    }
+                    else {
+                        // if """ done, else accept " or ""
+                        if (t.accept(quoteChar)) {
+                            if (t.accept(quoteChar)) {
+                                return sb.string;
+                            }
+                            sb.appendCharacter(quoteChar);
+                        }
+                        sb.appendCharacter(quoteChar);
+                    }
+                }
+                else if (c < #20.character && !c in "\r\n") {
+                    t.error("control character found");
+                    t.advance();
+                    sb.appendCharacter(#FFFD.character);
+                }
+                else if (!literal && c == '\\') {
+                    t.advance();
+                    lastWasSlash = true;
+                }
+                else {
+                    t.advance();
+                    sb.appendCharacter(c);
+                }
+            }
+            if (lastWasSlash) {
+                t.error("string ended in '\\'");
+            }
+            t.error("unterminated string");
+            return sb.string;
         }
     };
 };

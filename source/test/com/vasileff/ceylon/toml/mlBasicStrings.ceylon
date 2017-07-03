@@ -1,5 +1,5 @@
 import ceylon.test {
-    test, ignore, assertEquals, assertTrue
+    test, assertEquals, assertTrue
 }
 import com.vasileff.ceylon.toml {
     parseToml, TomlParseException
@@ -15,7 +15,6 @@ shared object mlBasicStrings {
         };
     }
 
-    ignore
     shared test void unterminated() {
         assertTrue {
             parseToml("key = ``tq``abc") is TomlParseException;
@@ -26,7 +25,6 @@ shared object mlBasicStrings {
         };
     }
 
-    ignore
     shared test void unescapes() {
         checkValue {
             input = "``tq``\\b\\t\\n\\f\\r\\\"\\\\``tq``";
@@ -34,21 +32,17 @@ shared object mlBasicStrings {
         };
     }
 
-
-// TODO
-    ignore
     shared test void unescapeError() {
         value input = "key = ``tq``\\xhello``tq`` ";
         "Illegal escape \\x should generate an error"
         assert (is TomlParseException e = parseToml(input));
         assertEquals {
             actual = e.partialResult.get("key");
-            expected = "xhello";
+            expected = "\\xhello";
             "should produce result anyway";
         };
     }
 
-    ignore
     shared test void unicode4digit() {
         checkValue {
             input = "``tq``-\\u0023\\u0024-``tq`` ";
@@ -56,7 +50,6 @@ shared object mlBasicStrings {
         };
     }
 
-    ignore
     shared test void unicode8digit() {
         checkValue {
             input = "``tq``-\\U0001D419\\U0001D419-``tq``";
@@ -64,7 +57,6 @@ shared object mlBasicStrings {
         };
     }
 
-    ignore
     shared test void unicode4digitLengthErrors() {
         assertTrue {
             parseToml("key = ``tq``\\u023 ``tq``") is TomlParseException;
@@ -85,7 +77,6 @@ shared object mlBasicStrings {
         };
     }
 
-    ignore
     shared test void unicode8digitLengthErrors() {
         assertTrue {
             parseToml("key = ``tq``\\U001D419 ``tq``") is TomlParseException;
@@ -106,10 +97,9 @@ shared object mlBasicStrings {
         };
     }
 
-    ignore
     shared test void unicodeBadCodePoint() {
         assertTrue {
-            parseToml("key = ``tq``\\U#00110000``tq``") is TomlParseException;
+            parseToml("key = ``tq``\\U00110000``tq``") is TomlParseException;
         };
     }
 
@@ -123,7 +113,6 @@ shared object mlBasicStrings {
         };
     }
 
-    ignore
     shared test void twoLineSkipFirst() {
         checkValue {
             input = "``tq``\nabc\ndef``tq``";
@@ -145,7 +134,6 @@ shared object mlBasicStrings {
         };
     }
 
-    ignore
     shared test void threeLineSkipFirst() {
         checkValue {
             input = "``tq``\n\nabc\ndef``tq``";

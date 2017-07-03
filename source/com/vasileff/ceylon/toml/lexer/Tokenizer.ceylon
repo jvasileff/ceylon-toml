@@ -1,3 +1,7 @@
+import com.vasileff.ceylon.toml.parser {
+    ParseException
+}
+
 shared class Tokenizer({Character*} input,
         Integer offsetPosition = 0,
         Integer offsetLine = 1,
@@ -13,6 +17,18 @@ shared class Tokenizer({Character*} input,
     shared variable Integer startPosition = position;
     shared variable Integer startLine = line;
     shared variable Integer startColumn = column;
+
+    variable [ParseException*] errors = [];
+
+    shared ParseException error(String? description = null) {
+        // FIXME improve error handling!!!
+        value sb = StringBuilder();
+        sb.append(description else "lex error");
+        sb.append(" at ``startLine``:``startColumn``");
+        value exception = ParseException(null, sb.string);
+        errors = errors.withTrailing(exception);
+        return exception;
+    }
 
     shared Character? advance() {
         if (!is Finished c = iterator.next()) {
@@ -40,30 +56,18 @@ shared class Tokenizer({Character*} input,
     shared Character? peek()
         =>  if (!is Finished p = iterator.peek()) then p else null;
 
-    shared Boolean accept(String | Character | Boolean(Character) valid) {
-        switch (valid)
-        case (is String) {
-            if (exists p = peek(), p in valid) {
-                advance();
-                return true;
-            }
-            return false;
-        }
-        case (is Character) {
-            if (exists p = peek(), p == valid) {
-                advance();
-                return true;
-            }
-            return false;
+    Boolean check(Character c, String | Character | Boolean(Character) valid)
+        =>  switch (valid)
+            case (is String) c in valid
+            case (is Character) c == valid
+            else valid(c);
 
+    shared Boolean accept(String | Character | Boolean(Character) valid) {
+        if (exists c = peek(), check(c, valid)) {
+            advance();
+            return true;
         }
-        else {
-            if (exists p = peek(), valid(p)) {
-                advance();
-                return true;
-            }
-            return false;
-        }
+        return false;
     }
 
     shared Integer acceptRun(String | Character | Boolean(Character) valid) {
@@ -74,11 +78,29 @@ shared class Tokenizer({Character*} input,
         return count;
     }
 
+    shared [Character*] read(
+            String | Character | Boolean(Character) valid,
+            Integer maxLength = runtime.maxIntegerValue) {
+        variable value count = 0;
+        variable {Character*} chars = [];
+        while (count++ < maxLength, exists c = peek(), check(c, valid)) {
+            chars = chars.follow(c);
+            advance();
+        }
+        return chars.sequence().reversed;
+    }
+
     shared String text()
         =>  builder.string;
 
-    shared Token newToken(TokenType type, String text = this.text()) {
-        value result = Token(type, text, startPosition, startLine, startColumn);
+    shared Token newToken(
+            TokenType type,
+            String? processedText = null,
+            String text = this.text()) {
+        value result = Token(
+                type, text,
+                startPosition, startLine, startColumn,
+                errors, processedText);
         ignore();
         return result;
     }

@@ -4,7 +4,7 @@ import com.vasileff.ceylon.toml.lexer {
 
 abstract class BaseParser({Token*} tokenStream) {
     value tokens = tokenStream.filter((t) => !t.type == whitespace).iterator();
-    value eofToken = Token(eof, "", -1, -1, -1);
+    value eofToken = Token(eof, "", -1, -1, -1, []);
     variable Token | Finished | Null nextToken = null;
     shared variable [ParseException*] errors = [];
 
@@ -46,6 +46,7 @@ abstract class BaseParser({Token*} tokenStream) {
     shared Token advance() {
         value result = peek();
         nextToken = null;
+        errors = concatenate(errors, result.errors);
         return result;
     }
 
