@@ -2,12 +2,12 @@ import ceylon.test {
     assertEquals
 }
 import com.vasileff.ceylon.toml {
-    parseToml, TomlParseException
+    parseToml, TomlParseException, TomlValue
 }
 
 void checkValue(
         String input,
-        String expected,
+        TomlValue expected,
         Boolean withError = false,
         Boolean eofAfter = true) {
 

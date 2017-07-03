@@ -159,13 +159,20 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
             }
             else {
                 advance();
-                return parseTomlValue(
-                    tomlValueTokenStream(
-                        token.text,
-                        token.position,
-                        token.line,
-                        token.column)
-                );
+                try {
+                    return parseTomlValue(
+                        tomlValueTokenStream(
+                            token.text,
+                            token.position,
+                            token.line,
+                            token.column)
+                    );
+                }
+                catch (ParseException e) {
+                    // TODO remove temp hack not to lose the error!
+                    errors = errors.withTrailing(e);
+                    throw e;
+                }
             }
         }
         else {
