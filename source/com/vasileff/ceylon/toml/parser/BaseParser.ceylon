@@ -2,11 +2,20 @@ import com.vasileff.ceylon.toml.lexer {
     ...
 }
 
-abstract class BaseParser({Token*} tokenStream) {
-    value tokens = tokenStream.filter((t) => !t.type == whitespace).iterator();
+abstract class BaseParser(TomlLexer tokenStream) {
     value eofToken = Token(eof, "", -1, -1, -1, []);
     variable Token | Finished | Null nextToken = null;
     shared variable [ParseException*] errors = [];
+
+    shared Token | Finished next() {
+        while (true) {
+            value t = tokenStream.next();
+            if (!is Finished t, t.type == whitespace) {
+                continue;
+            }
+            return t;
+        }
+    }
 
     shared String formatToken(Token token)
         =>  if (token.type == newline) then "newline"
@@ -31,7 +40,7 @@ abstract class BaseParser({Token*} tokenStream) {
     }
 
     shared Token peek() {
-        value t = nextToken else tokens.next();
+        value t = nextToken else next();
         nextToken = t;
         return if (is Token t) then t else eofToken;
     }

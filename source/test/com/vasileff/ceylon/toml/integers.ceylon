@@ -1,5 +1,5 @@
 import ceylon.test {
-    test, ignore, assertTrue
+    test, assertTrue
 }
 import com.vasileff.ceylon.toml {
     parseToml, TomlParseException
@@ -51,7 +51,6 @@ shared object integers {
         assertTrue(parseToml("key = +10_") is TomlParseException);
     }
 
-    ignore
     shared test void badTrailingChar() {
         checkValue {
             input = "11a";

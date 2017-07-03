@@ -1,7 +1,7 @@
-Boolean isWordCharacter(Character c)
+Boolean isBareKeyCharacter(Character c)
     =>     c.letter
         || c.digit
-        || c in "_-+:.";
+        || c in "_-";
 
 Boolean isBasicUnescapedCharacter(Character c)
     =>     c in '\{#20}'..'\{#21}'

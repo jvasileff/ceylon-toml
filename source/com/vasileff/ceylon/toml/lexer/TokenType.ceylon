@@ -15,23 +15,9 @@ shared object newline extends TokenType("newline") {}
  """
 shared object comment extends TokenType("comment") {}
 
- """A group of characters that are not separated by a space. Allowed characters:
-
-    - [A-Za-z0-9_-] # used in bareKeys
-    - [+:.] # used in numbers and dates
-
-    Depending on the context, an instance could be a bare key or a value, and for
-    values, one of:
-
-    - Boolean
-    - Integer
-    - Float
-    - LocalTime
-    - LocalDate
-    - LocalDateTime
-    - OffsetDateTime
+ """A group of characters that are not separated by a space including [A-Za-z0-9_-].
  """
-shared object word extends TokenType("word") {}
+shared object bareKey extends TokenType("bareKey") {}
 
 """Characters surrounded by quotation marks. The contents may be any Unicode character
    except quotation mark, backslash, and the control characters (U+0000 to U+001F) which
@@ -118,6 +104,12 @@ shared object exponentCharacter extends TokenType("exponentCharacter") {}
 
 "The character 'z' or 'Z'"
 shared object zuluCharacter extends TokenType("zuluCharacter") {}
+
+"The string 'true'"
+shared object trueKeyword extends TokenType("trueKeyword") {}
+
+"The string 'false'"
+shared object falseKeyword extends TokenType("falseKeyword") {}
 
 "End of file token"
 shared object eof extends TokenType("eof") {}

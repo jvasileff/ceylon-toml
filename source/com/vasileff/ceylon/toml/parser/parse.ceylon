@@ -8,10 +8,10 @@ import ceylon.collection {
     IdentitySet
 }
 
-shared [TomlTable, ParseException*] parse({Token*} tokenStream)
-    =>  Parser(tokenStream).parse();
+shared [TomlTable, ParseException*] parse(TomlLexer lexer)
+    =>  Parser(lexer).parse();
 
-class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
+class Parser(TomlLexer lexer) extends BaseParser(lexer) {
     value result = TomlTable();
     variable value currentTable = result;
     value createdButNotDefined = IdentitySet<TomlTable>();
@@ -31,10 +31,21 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
         }
     }
 
+    T inMode<T>(LexerMode mode, T() do) {
+        value save = lexer.mode;
+        try {
+            lexer.mode = mode;
+            return do();
+        }
+        finally {
+            lexer.mode = save;
+        }
+    }
+
     shared [TomlTable, ParseException*] parse() {
         while (!check(eof)) {
             try {
-                parseLine();
+                inMode(LexerMode.key, parseLine);
             }
             catch (ParseException e) {
                 acceptRun(not([newline, eof].contains));
@@ -47,7 +58,7 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
             BareKey
      """
     String parseBareKey() {
-        value token = consume(word, "expected a bare key");
+        value token = consume(bareKey, "expected a bare key");
         validateBareKey(token, token.text);
         return token.text;
     }
@@ -83,9 +94,10 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
             MultilineLiteralString
      """
     String parseMultilineLiteralString() {
-        // TODO validate and unescape
-        value token = consume(multilineLiteralString,
-            "expected a multi-line literal string");
+        value token = consume(
+            multilineLiteralString,
+            "expected a multi-line literal string"
+        );
         assert (exists s = token.processedText);
         return String(s);
     }
@@ -95,7 +107,7 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
      """
     String parseKey() {
         switch(peek().type)
-        case (word) { return parseBareKey(); }
+        case (bareKey) { return parseBareKey(); }
         case (basicString) { return parseBasicString(); }
         case (literalString) { return parseLiteralString(); }
         else {
@@ -126,15 +138,123 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
     TomlTable parseInlineTable() {
         value table = TomlTable();
         consume(openBrace, "expected '{' to start the inline table");
-        while (!check(closeBrace)) {
-            table.putAll { parseKeyValuePair() };
-            if (!accept(comma)) {
-                break;
-            }
-        }
+        inMode {
+            LexerMode.key;
+            void () {
+                while (!check(closeBrace)) {
+                    table.putAll { parseKeyValuePair() };
+                    if (!accept(comma)) {
+                        break;
+                    }
+                }
+            };
+        };
         accept(comma); // trailing comma ok
         consume(closeBrace, "expected '}' to end the inline table");
         return table;
+    }
+
+    String parseInteger(
+            Token? signToken = null,
+            Token? leadingDigitsToken = null) {
+
+        value positive
+            =   if (exists signToken)
+                    then signToken.type == plus
+                else if (!leadingDigitsToken exists)
+                    then accept(plus) || !accept(minus)
+                else true;
+
+        value sb = StringBuilder();
+
+        if (!positive) {
+            sb.appendCharacter('-');
+        }
+
+        sb.append {
+            (leadingDigitsToken
+                else consume(digits, "expected digits")).text;
+        };
+
+        while (accept(underscore)) {
+            value t = consume(digits, "expected digits after '_'");
+            sb.append(t.text);
+        }
+
+        return sb.string;
+    }
+
+    Integer | Float parseNumber(
+            Token? signToken = null,
+            Token? leadingDigitsToken = null) {
+
+        value firstToken
+            =   signToken else leadingDigitsToken else peek();
+
+        value wholePart
+            =   parseInteger(signToken, leadingDigitsToken);
+
+        value fractionalPart
+            =   if (accept(period))
+                then parseInteger()
+                else null;
+
+        value exponent
+            =   if (accept(exponentCharacter))
+                then "e" + parseInteger()
+                else null;
+
+        if (!fractionalPart exists && !exponent exists) {
+            switch (i = Integer.parse(wholePart))
+            case (is Integer) {
+                return i;
+            }
+            else {
+                throw error(firstToken, i.message);
+            }
+        }
+        else {
+            value floatString
+                =   wholePart
+                    + "." + (fractionalPart else "0")
+                    + (exponent else "");
+            switch (f = Float.parse(floatString))
+            case (is Float) {
+                return f;
+            }
+            else {
+                throw error(firstToken, f.message);
+            }
+        }
+    }
+
+    Integer | Float parseNumberOrDate() { // | Date
+        if (check(eof)) {
+            throw error(peek(), "expected a value");
+        }
+
+        if (check(plus, minus)) {
+            return parseNumber();
+        }
+
+        value leadingDigits = consume(digits, "expected digits");
+
+        switch (peek().type)
+        case (underscore | exponentCharacter) {
+            return parseNumber(null, leadingDigits);
+        }
+        case (colon) {
+            // return parseLocalTime(leadingDigits);
+            throw error(peek(), "times are not yet supported");
+        }
+        case (minus) {
+            // return parseDate(leadingDigits);
+            throw error(peek(), "dates are not yet supported");
+        }
+        else {
+            // it's an integer
+            return parseNumber(null, leadingDigits);
+        }
     }
 
      """
@@ -149,35 +269,11 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
         case (multilineLiteralString) { return parseMultilineLiteralString(); }
         case (openBracket) { return parseTomlArray(); }
         case (openBrace) { return parseInlineTable(); }
-        case (word) {
-            if (token.text == "true") {
-                advance();
-                return true;
-            }
-            else if (token.text == "false") {
-                advance();
-                return false;
-            }
-            else {
-                advance();
-                try {
-                    return parseTomlValue(
-                        tomlValueTokenStream(
-                            token.text,
-                            token.position,
-                            token.line,
-                            token.column)
-                    );
-                }
-                catch (ParseException e) {
-                    // TODO remove temp hack not to lose the error!
-                    errors = errors.withTrailing(e);
-                    throw e;
-                }
-            }
-        }
+        case (trueKeyword) { advance(); return true; }
+        case (falseKeyword) { advance(); return false; }
+        case (plus | minus | digits) { return parseNumberOrDate(); }
         else {
-            throw error(token, "expected a value");
+            throw error(peek(), "expected a toml value");
         }
     }
 
@@ -185,56 +281,24 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
             keyValuePair : key '=' value Comment? (Newline | EOF)
      """
     String->TomlValue parseKeyValuePair() {
-        value key = parseKey();
+        value key = inMode(LexerMode.key, parseKey);
         consume(equal, "expected '='");
-        value val = parseValue();
-        return key -> val;
+        return key -> inMode(LexerMode.val, parseValue);
     }
 
     [String*] parseKeyPath() {
-        function splitWord(Token token) {
-            assert (token.type == word);
-            return token.text
-                .split('.'.equals, false, false)
-                .map((string)
-                    =>  if (string.empty)
-                        then null
-                        else if (string == ".")
-                        then Token(period, string,
-                                    // FIXME track exact position
-                                   token.position, token.line, token.column, [])
-                        else Token(word, string,
-                                   token.position, token.line, token.column, []))
-                .coalesced;
-        }
-
-        // "word" tokens may have '.' separators, so split them
-        value parts
-            =   acceptRun(word, basicString, literalString)
-                    .flatMap((token)
-                        =>  if (token.type == word)
-                            then splitWord(token)
-                            else [token])
-                    .sequence();
-
-        if (!nonempty parts) {
-            return [];
-        }
-
-        if (parts.first.type == period) {
-            throw error(parts.first, "table name may not start with '.'");
-        }
-
-        if (parts.last.type == period) {
-            throw error(parts.first, "table name may not end with '.'");
-        }
-
+        variable Token part = peek();
         variable {String*} result = [];
         variable value lastWasDot = true;
 
-        for (part in parts) {
+        if (part.type == period) {
+            throw error(part, "table name may not start with '.'");
+        }
+
+        while (check(bareKey, basicString, literalString, period)) {
+            part = advance();
             if (lastWasDot && part.type == period) {
-                throw error(parts.first, "consecutive '.'s may not exist between keys");
+                throw error(part, "consecutive '.'s may not exist between keys");
             }
             else if (part.type == period) {
                 lastWasDot = true;
@@ -245,16 +309,13 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
                 }
                 lastWasDot = false;
                 switch (part.type)
-                case (word) {
+                case (bareKey) {
                     validateBareKey(part, part.text);
                     result = result.follow(part.text);
                 }
-                case (basicString) {
-                    // TODO unescape
-                    result = result.follow(String(part.text.rest.exceptLast));
-                }
-                case (literalString) {
-                    result = result.follow(String(part.text.rest.exceptLast));
+                case (basicString | literalString) {
+                    assert (exists text = part.processedText);
+                    result = result.follow(text);
                 }
                 else {
                     throw error(part, "invalid key");
@@ -262,12 +323,16 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
             }
         }
 
+        if (lastWasDot) {
+            throw error(part, "table name may not end with '.'");
+        }
+
         return result.sequence().reversed;
     }
 
     void parseTable() {
         value openToken = consume(openBracket, "expected '['");
-        value path = parseKeyPath();
+        value path = inMode(LexerMode.key, parseKeyPath);
         if (!nonempty path) {
             throw error(openToken, "table name must not be empty");
         }
@@ -297,7 +362,7 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
 
     void parseArrayOfTables() {
         value openToken = consume(doubleOpenBracket, "expected '[['");
-        value path = parseKeyPath();
+        value path = inMode(LexerMode.key, parseKeyPath);
         if (!nonempty path) {
             throw error(openToken, "table name must not be empty");
         }
@@ -345,7 +410,7 @@ class Parser({Token*} tokenStream) extends BaseParser(tokenStream) {
         switch (t = peek().type)
         case (comment) { advance(); }
         case (newline) { advance(); }
-        case (word | basicString | literalString) {
+        case (bareKey | basicString | literalString) {
             currentTable.putAll { parseKeyValuePair() };
             accept(comment);
             if (!accept(newline, eof)) {
