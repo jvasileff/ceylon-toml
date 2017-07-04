@@ -11,24 +11,78 @@ import ceylon.collection {
 shared [TomlTable, ParseException*] parse({Character*} input)
     =>  Parser(Lexer(input)).parse();
 
-class Parser(Lexer lexer) extends BaseParser(lexer) {
+class Parser(Lexer lexer) {
     value result = TomlTable();
+    variable Token | Finished | Null nextToken = null;
     variable value currentTable = result;
+    value eofToken = Token(eof, "", -1, -1, -1, []);
     value createdButNotDefined = IdentitySet<TomlTable>();
 
-    void validateBareKey(Token token, String key) {
-        function validChar(Character c)
-            =>     c in 'A'..'Z'
-                || c in 'a'..'z'
-                || c in '0'..'9'
-                || c == '_' || c == '-'; 
-        if (!key.every(validChar)) {
-            throw error {
-                token;
-                "bare keys may only contain the characters \
-                 'A-Z', 'a-z', '0-9', '_', and '-'";
-            };
+    shared variable [ParseException*] errors = [];
+
+    shared String formatToken(Token token)
+        =>  if (token.type == newline) then "newline"
+            else if (token.type == newline) then "eof"
+            else if (token.text.shorterThan(10)) then "'``token.text``'"
+            else "'``token.text[...10]``...'";
+
+    shared ParseException error(Token token, String? description = null) {
+        // TODO this is no good for errors like:
+        // error: unexpected '['; table [first-Table] has already been defined at 75:1
+        value sb = StringBuilder();
+        sb.append("unexpected ");
+        sb.append(formatToken(token));
+        if (exists description) {
+            sb.append("; ");
+            sb.append(description);
         }
+        sb.append(" at ``token.line``:``token.column``");
+        value exception = ParseException(token, sb.string);
+        errors = errors.withTrailing(exception);
+        return exception;
+    }
+
+    shared Token peek() {
+        value t = nextToken else lexer.next();
+        nextToken = t;
+        return if (is Token t) then t else eofToken;
+    }
+
+    shared Boolean check(Boolean(TokenType) | TokenType+ type)
+        =>  let (p = peek().type)
+            type.any((type)
+                =>  if (is TokenType type)
+                    then p == type
+                    else type(p));
+
+    shared Token advance() {
+        value result = peek();
+        nextToken = null;
+        errors = concatenate(errors, result.errors);
+        return result;
+    }
+
+    shared Boolean accept(Boolean(TokenType) | TokenType+ type) {
+        if (check(*type)) {
+            advance();
+            return true;
+        }
+        return false;
+    }
+
+    shared [Token*] acceptRun(Boolean(TokenType) | TokenType+ type) {
+        variable {Token*} result = [];
+        while (check(*type)) {
+            result = result.follow(advance());
+        }
+        return result.sequence().reversed;
+    }
+
+    shared Token consume(Boolean(TokenType) | TokenType type, String errorDescription) {
+        if (check(type)) {
+            return advance();
+        }
+        throw error(peek(), errorDescription);
     }
 
     shared [TomlTable, ParseException*] parse() {
@@ -423,6 +477,21 @@ class Parser(Lexer lexer) extends BaseParser(lexer) {
         }
         else {
             throw error(peek());
+        }
+    }
+
+    void validateBareKey(Token token, String key) {
+        function validChar(Character c)
+            =>     c in 'A'..'Z'
+                || c in 'a'..'z'
+                || c in '0'..'9'
+                || c == '_' || c == '-'; 
+        if (!key.every(validChar)) {
+            throw error {
+                token;
+                "bare keys may only contain the characters \
+                 'A-Z', 'a-z', '0-9', '_', and '-'";
+            };
         }
     }
 }
