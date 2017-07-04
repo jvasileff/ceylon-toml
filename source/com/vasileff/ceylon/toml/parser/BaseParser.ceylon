@@ -2,7 +2,7 @@ import com.vasileff.ceylon.toml.lexer {
     ...
 }
 
-abstract class BaseParser(TomlLexer tokenStream) {
+abstract class BaseParser(Lexer tokenStream) {
     value eofToken = Token(eof, "", -1, -1, -1, []);
     variable Token | Finished | Null nextToken = null;
     shared variable [ParseException*] errors = [];

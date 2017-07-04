@@ -1,4 +1,4 @@
-shared class TomlLexer({Character*} characters) {
+shared class Lexer({Character*} characters) {
     shared variable LexerMode mode = LexerMode.key;
     value t = Tokenizer(characters);
     variable value eofEmitted = false;

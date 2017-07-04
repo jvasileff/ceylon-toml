@@ -8,10 +8,10 @@ import ceylon.collection {
     IdentitySet
 }
 
-shared [TomlTable, ParseException*] parse(TomlLexer lexer)
-    =>  Parser(lexer).parse();
+shared [TomlTable, ParseException*] parse({Character*} input)
+    =>  Parser(Lexer(input)).parse();
 
-class Parser(TomlLexer lexer) extends BaseParser(lexer) {
+class Parser(Lexer lexer) extends BaseParser(lexer) {
     value result = TomlTable();
     variable value currentTable = result;
     value createdButNotDefined = IdentitySet<TomlTable>();
