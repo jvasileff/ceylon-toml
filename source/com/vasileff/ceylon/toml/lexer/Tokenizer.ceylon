@@ -78,16 +78,16 @@ shared class Tokenizer({Character*} input,
         return count;
     }
 
-    shared [Character*] read(
+    shared String read(
             String | Character | Boolean(Character) valid,
             Integer maxLength = runtime.maxIntegerValue) {
+        value sb = StringBuilder();
         variable value count = 0;
-        variable {Character*} chars = [];
         while (count++ < maxLength, exists c = peek(), check(c, valid)) {
-            chars = chars.follow(c);
+            sb.appendCharacter(c);
             advance();
         }
-        return chars.sequence().reversed;
+        return sb.string;
     }
 
     shared String text()

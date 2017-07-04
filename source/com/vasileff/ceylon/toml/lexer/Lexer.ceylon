@@ -143,7 +143,7 @@ shared class Lexer({Character*} characters) {
                                     found ``digits.size``");
                     }
                     else {
-                        assert (is Integer int = Integer.parse(String(digits), 16));
+                        assert (is Integer int = Integer.parse(digits, 16));
                         try {
                             sb.appendCharacter(int.character);
                         }
