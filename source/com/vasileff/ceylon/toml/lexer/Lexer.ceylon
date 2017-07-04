@@ -205,4 +205,20 @@ shared class Lexer({Character*} characters) {
         t.error("unterminated string");
         return sb.string;
     }
+
+    Boolean isBareKeyCharacter(Character c)
+        =>     c.letter
+            || c.digit
+            || c in "_-";
+
+    Boolean isCommentCharacter(Character c)
+        =>     c in '\{#20}'..'\{#10ffff}'
+            || c == '\t';
+
+    Boolean isDigit(Character c)
+        =>     c in '0'..'9';
+
+    Boolean isHexDigit(Character c)
+        =>     c in '0'..'9'
+            || c in 'A'..'F';
 }
