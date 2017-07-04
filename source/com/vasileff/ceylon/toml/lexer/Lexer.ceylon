@@ -3,6 +3,17 @@ shared class Lexer({Character*} characters) {
     value t = Tokenizer(characters);
     variable value eofEmitted = false;
 
+    shared T inMode<T>(LexerMode mode, T() do) {
+        value save = this.mode;
+        try {
+            this.mode = mode;
+            return do();
+        }
+        finally {
+            this.mode = save;
+        }
+    }
+
     shared Token | Finished next() {
         if (eofEmitted) {
             return finished;

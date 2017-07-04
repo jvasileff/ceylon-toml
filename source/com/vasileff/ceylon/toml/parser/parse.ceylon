@@ -31,21 +31,10 @@ class Parser(Lexer lexer) extends BaseParser(lexer) {
         }
     }
 
-    T inMode<T>(LexerMode mode, T() do) {
-        value save = lexer.mode;
-        try {
-            lexer.mode = mode;
-            return do();
-        }
-        finally {
-            lexer.mode = save;
-        }
-    }
-
     shared [TomlTable, ParseException*] parse() {
         while (!check(eof)) {
             try {
-                inMode(LexerMode.key, parseLine);
+                lexer.inMode(LexerMode.key, parseLine);
             }
             catch (ParseException e) {
                 acceptRun(not([newline, eof].contains));
@@ -138,7 +127,7 @@ class Parser(Lexer lexer) extends BaseParser(lexer) {
     TomlTable parseInlineTable() {
         value table = TomlTable();
         consume(openBrace, "expected '{' to start the inline table");
-        inMode {
+        lexer.inMode {
             LexerMode.key;
             void () {
                 while (!check(closeBrace)) {
@@ -281,9 +270,9 @@ class Parser(Lexer lexer) extends BaseParser(lexer) {
             keyValuePair : key '=' value Comment? (Newline | EOF)
      """
     String->TomlValue parseKeyValuePair() {
-        value key = inMode(LexerMode.key, parseKey);
+        value key = lexer.inMode(LexerMode.key, parseKey);
         consume(equal, "expected '='");
-        return key -> inMode(LexerMode.val, parseValue);
+        return key -> lexer.inMode(LexerMode.val, parseValue);
     }
 
     [String*] parseKeyPath() {
@@ -332,7 +321,7 @@ class Parser(Lexer lexer) extends BaseParser(lexer) {
 
     void parseTable() {
         value openToken = consume(openBracket, "expected '['");
-        value path = inMode(LexerMode.key, parseKeyPath);
+        value path = lexer.inMode(LexerMode.key, parseKeyPath);
         if (!nonempty path) {
             throw error(openToken, "table name must not be empty");
         }
@@ -362,7 +351,7 @@ class Parser(Lexer lexer) extends BaseParser(lexer) {
 
     void parseArrayOfTables() {
         value openToken = consume(doubleOpenBracket, "expected '[['");
-        value path = inMode(LexerMode.key, parseKeyPath);
+        value path = lexer.inMode(LexerMode.key, parseKeyPath);
         if (!nonempty path) {
             throw error(openToken, "table name must not be empty");
         }
