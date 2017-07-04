@@ -4,12 +4,8 @@ class PeekingIterator<Element>(Iterator<Element> delegate)
 
     variable Element | Finished | Null peeked = null;
 
-    shared Element | Finished peek() {
-        if (exists p = peeked) {
-            return p;
-        }
-        return peeked = delegate.next();
-    }
+    shared Element | Finished peek()
+        =>  peeked else (peeked = delegate.next());
 
     shared actual Element | Finished next() {
         if (exists p = peeked) {
