@@ -17,13 +17,13 @@ class Parser(Lexer lexer) {
 
     shared variable [ParseException*] errors = [];
 
-    shared String formatToken(Token token)
+    String formatToken(Token token)
         =>  if (token.type == newline) then "newline"
             else if (token.type == newline) then "eof"
             else if (token.text.shorterThan(10)) then "'``token.text``'"
             else "'``token.text[...10]``...'";
 
-    shared ParseException error(Token token, String? description = null) {
+    ParseException error(Token token, String? description = null) {
         // TODO this is no good for errors like:
         // error: unexpected '['; table [first-Table] has already been defined at 75:1
         value sb = StringBuilder();
@@ -39,27 +39,27 @@ class Parser(Lexer lexer) {
         return exception;
     }
 
-    shared Token peek() {
+    Token peek() {
         value t = nextToken else lexer.next();
         nextToken = t;
         return if (is Token t) then t else eofToken;
     }
 
-    shared Boolean check(Boolean(TokenType) | TokenType+ type)
+    Boolean check(Boolean(TokenType) | TokenType+ type)
         =>  let (p = peek().type)
             type.any((type)
                 =>  if (is TokenType type)
                     then p == type
                     else type(p));
 
-    shared Token advance() {
+    Token advance() {
         value result = peek();
         nextToken = null;
         errors = concatenate(errors, result.errors);
         return result;
     }
 
-    shared Boolean accept(Boolean(TokenType) | TokenType+ type) {
+    Boolean accept(Boolean(TokenType) | TokenType+ type) {
         if (check(*type)) {
             advance();
             return true;
@@ -67,7 +67,7 @@ class Parser(Lexer lexer) {
         return false;
     }
 
-    shared [Token*] acceptRun(Boolean(TokenType) | TokenType+ type) {
+    [Token*] acceptRun(Boolean(TokenType) | TokenType+ type) {
         variable {Token*} result = [];
         while (check(*type)) {
             result = result.follow(advance());
@@ -75,7 +75,7 @@ class Parser(Lexer lexer) {
         return result.sequence().reversed;
     }
 
-    shared Token consume(Boolean(TokenType) | TokenType type, String errorDescription) {
+    Token consume(Boolean(TokenType) | TokenType type, String errorDescription) {
         if (check(type)) {
             return advance();
         }
