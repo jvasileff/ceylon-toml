@@ -74,7 +74,8 @@ shared class Lexer({Character*} characters) {
         }
         else if (c == '\t' || c == ' ') {
             t.acceptRun("\t ");
-            return t.newToken(whitespace);
+            t.ignore();
+            return next();
         }
         else if (mode == LexerMode.key) {
             if (isBareKeyCharacter(c)) {
