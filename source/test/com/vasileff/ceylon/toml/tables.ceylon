@@ -141,4 +141,13 @@ shared object tables {
             };
         };
     }
+
+    shared void test() {
+        empty();
+        oneTable();
+        twoTables();
+        nestedTable();
+        nestedTableSubFirst();
+        nestedTable3Deep();
+    }
 }

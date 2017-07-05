@@ -64,4 +64,14 @@ shared object literalStrings {
             expected = """-\U0001D419\U0001D419-""";
         };
     }
+
+    shared void test() {
+        empty();
+        unterminated();
+        unterminatedLineRecover();
+        dontUnescape();
+        dontUnescapeError();
+        ignoreUnicode4digit();
+        ignoreUnicode8digit(); 
+    }
 }

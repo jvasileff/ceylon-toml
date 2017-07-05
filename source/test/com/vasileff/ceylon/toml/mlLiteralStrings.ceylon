@@ -92,4 +92,18 @@ shared object mlLiteralStrings {
             expected = "\nabc\ndef";
         };
     }
+
+    shared void test() {
+        empty();
+        unterminated();
+        dontUnescape();
+        dontUnescapeError();
+        ignoreUnicode4digit();
+        ignoreUnicode8digit();
+        twoLine();
+        twoLineSkipFirst();
+        threeLine();
+        threeLineEmptyLast();
+        threeLineSkipFirst();
+    }
 }

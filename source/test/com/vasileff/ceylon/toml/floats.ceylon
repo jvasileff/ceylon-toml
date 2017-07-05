@@ -107,4 +107,17 @@ shared object floats {
             withError = true;
         };
     }
+
+    shared void test() {
+        simpleFloats();
+        exponents();
+        exponentNoFractionals();
+        underscoreWhole();
+        underscoreFractional();
+        underscoreExponent();
+        badUnderscoreWhole();
+        badUnderscoreFractional();
+        badUnderscoreExponent();
+        badTrailingChar();
+    }
 }

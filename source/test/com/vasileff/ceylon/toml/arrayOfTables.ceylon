@@ -166,4 +166,12 @@ shared object arrayOfTables {
             };
         };
     }
+
+    shared void test() {
+        empty();
+        notEmpty();
+        twoArraysMixedOrder();
+        nested();
+        nestedArrayFirst();
+    }
 }

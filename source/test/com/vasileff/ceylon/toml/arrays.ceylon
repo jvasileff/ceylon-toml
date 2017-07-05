@@ -18,4 +18,14 @@ shared object arrays {
 
     shared test void tooManyCommasTrailing()
         =>  assertTrue(parseToml("key = [1,2,,]") is TomlParseException);
+
+    shared void test() {
+        empty();
+        // emptyComma();
+        el1();
+        el2();
+        trailingComma();
+        tooManyCommas();
+        tooManyCommasTrailing();
+    }
 }

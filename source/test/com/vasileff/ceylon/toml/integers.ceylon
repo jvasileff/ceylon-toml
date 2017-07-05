@@ -58,4 +58,13 @@ shared object integers {
             withError = true;
         };
     }
+
+    shared void test() {
+        simpleIntegers();
+        tooLarge();
+        tooSmall();
+        underscore();
+        badUnderscore();
+        badTrailingChar();
+    }
 }

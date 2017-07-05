@@ -114,4 +114,17 @@ shared object basicStrings {
             parseToml("""key = "\U00110000" """) is TomlParseException;
         };
     }
+
+    shared void test() {
+        empty();
+        unterminated();
+        unterminatedLineRecover();
+        unescapes();
+        unescapeError();
+        unicode4digit();
+        unicode8digit();
+        unicode4digitLengthErrors();
+        unicode8digitLengthErrors();
+        unicodeBadCodePoint();
+    }
 }

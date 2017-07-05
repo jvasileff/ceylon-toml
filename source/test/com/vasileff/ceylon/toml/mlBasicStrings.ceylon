@@ -140,4 +140,21 @@ shared object mlBasicStrings {
             expected = "\nabc\ndef";
         };
     }
+
+    shared void test() {
+        empty();
+        unterminated();
+        unescapes();
+        unescapeError();
+        unicode4digit();
+        unicode8digit();
+        unicode4digitLengthErrors();
+        unicode8digitLengthErrors();
+        unicodeBadCodePoint();
+        twoLine();
+        twoLineSkipFirst();
+        threeLine();
+        threeLineEmptyLast();
+        threeLineSkipFirst();
+    }
 }

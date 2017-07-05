@@ -18,4 +18,14 @@ shared object inlineTables {
 
     shared test void tooManyCommasTrailing()
         =>  assertTrue(parseToml("key = {a=1,b=2,,}") is TomlParseException);
+
+    shared void test() {
+        empty();
+        // emptyComma();
+        el1();
+        el2();
+        trailingComma();
+        tooManyCommas();
+        tooManyCommasTrailing();
+    }
 }
