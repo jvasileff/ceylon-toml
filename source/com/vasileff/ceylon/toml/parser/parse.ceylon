@@ -12,12 +12,11 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         object satisfies Producer<[TomlTable, ParseException*]> {
     value lexer = Lexer(input);
     value result = TomlTable();
+    variable [ParseException*] errors = [];
     variable Token | Finished | Null nextToken = null;
     variable value currentTable = result;
     value eofToken = Token(eof, "", -1, -1, -1, []);
     value createdButNotDefined = IdentitySet<TomlTable>();
-
-    shared variable [ParseException*] errors = [];
 
     String formatToken(Token token)
         =>  if (token.type == newline) then "newline"
