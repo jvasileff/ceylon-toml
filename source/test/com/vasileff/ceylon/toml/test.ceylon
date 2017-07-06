@@ -1,4 +1,4 @@
-shared void run() {
+shared void test() {
     print("starting tests");
     arrayOfTables.test();
     arrays.test();
