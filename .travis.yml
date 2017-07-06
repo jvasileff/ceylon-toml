@@ -32,8 +32,10 @@ install:
 script:
   - ceylon compile,compile-js,compile-dart
   - ceylon test,test-js $TEST_MODULE
+  - ceylon doc $LIBRARY_MODULE
 env:
   global:
     - CEYLON="http://ceylon-lang.org/download/dist/1_3_2"
+    - LIBRARY_MODULE="com.vasileff.ceylon.toml"
     - TEST_MODULE="test.com.vasileff.ceylon.toml"
 
