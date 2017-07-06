@@ -202,6 +202,9 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return table;
     }
 
+     """
+            Integer: ('+' | '-')? DIGIT+ ('_' DIGIT+)*
+     """
     String parseInteger(
             Token? signToken = null,
             Token? leadingDigitsToken = null) {
@@ -232,6 +235,9 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return sb.string;
     }
 
+     """
+            Float: Integer '.' Integer? (('E' | 'e') Integer)?
+     """
     Integer | Float parseNumber(
             Token? signToken = null,
             Token? leadingDigitsToken = null) {
