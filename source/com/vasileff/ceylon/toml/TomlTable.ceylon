@@ -23,10 +23,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
         =>  TomlTable.create(delegate.clone());
 
     "Returns a [[TomlTable]]."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[TomlTable]]";
-    }
+    throws(
+        `class AssertionError`,
+         "if the key does not exist or points to a type that is not [[TomlTable]]"
+    )
     shared TomlTable getTomlTable(String key) {
         "Expecting a TomlTable"
         assert (is TomlTable val = get(key));
@@ -34,10 +34,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[TomlTable]], or [[null]] if the [[key]] does not exist."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[TomlTable]]";
-    }
+    throws(
+        `class AssertionError`,
+         "if the key does not exist or points to a type that is not [[TomlTable]]"
+    )
     shared TomlTable? getTomlTableOrNull(String key) {
         "Expecting a TomlTable or Null"
         assert (is TomlTable? val = get(key));
@@ -45,10 +45,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[TomlArray]]."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[TomlArray]]";
-    }
+    throws(
+        `class AssertionError`,
+         "if the key does not exist or points to a type that is not [[TomlArray]]"
+    )
     shared TomlArray getTomlArray(String key) {
         "Expecting a TomlArray"
         assert (is TomlArray val = get(key));
@@ -56,10 +56,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[TomlArray]], or [[null]] if the [[key]] does not exist."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[TomlArray]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[TomlArray]]"
+    )
     shared TomlArray? getTomlArrayOrNull(String key) {
         "Expecting a TomlTable or Null"
         assert (is TomlArray? val = get(key));
@@ -67,10 +67,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[Time]]."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[Time]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[Time]]"
+    )
     shared Time getTime(String key) {
         "Expecting a Time"
         assert (is Time val = get(key));
@@ -78,10 +78,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[Time]], or [[null]] if the [[key]] does not exist."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[Time]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[Time]]"
+    )
     shared Time? getTimeOrNull(String key) {
         "Expecting a Time or Null"
         assert (is Time? val = get(key));
@@ -89,10 +89,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[Date]]."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[Date]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[Date]]"
+    )
     shared Date getDate(String key) {
         "Expecting a Date"
         assert (is Date val = get(key));
@@ -100,10 +100,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[Date]], or [[null]] if the [[key]] does not exist."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[Date]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[Date]]"
+    )
     shared Date? getDateOrNull(String key) {
         "Expecting a Date or Null"
         assert (is Date? val = get(key));
@@ -111,10 +111,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[DateTime]]."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[DateTime]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[DateTime]]"
+    )
     shared DateTime getDateTime(String key) {
         "Expecting a DateTime"
         assert (is DateTime val = get(key));
@@ -122,10 +122,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[DateTime]], or [[null]] if the [[key]] does not exist."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[DateTime]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[DateTime]]"
+    )
     shared DateTime? getDateTimeOrNull(String key) {
         "Expecting a DateTime or Null"
         assert (is DateTime? val = get(key));
@@ -133,10 +133,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[ZoneDateTime]]."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[ZoneDateTime]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[ZoneDateTime]]"
+    )
     shared ZoneDateTime getZoneDateTime(String key) {
         "Expecting a ZoneDateTime"
         assert (is ZoneDateTime val = get(key));
@@ -144,10 +144,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[ZoneDateTime]], or [[null]] if the [[key]] does not exist."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[ZoneDateTime]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[ZoneDateTime]]"
+    )
     shared ZoneDateTime? getZoneDateTimeOrNull(String key) {
         "Expecting a ZoneDateTime or Null"
         assert (is ZoneDateTime? val = get(key));
@@ -155,10 +155,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[Boolean]]."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[Boolean]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[Boolean]]"
+    )
     shared Boolean getBoolean(String key) {
         "Expecting a Boolean"
         assert (is Boolean val = get(key));
@@ -166,10 +166,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[Boolean]], or [[null]] if the [[key]] does not exist."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[Boolean]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[Boolean]]"
+    )
     shared Boolean? getBooleanOrNull(String key) {
         "Expecting a Boolean or Null"
         assert (is Boolean? val = get(key));
@@ -177,10 +177,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[Float]]."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[Float]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[Float]]"
+    )
     shared Float getFloat(String key) {
         "Expecting a Float"
         assert (is Float val = get(key));
@@ -188,10 +188,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[Float]], or [[null]] if the [[key]] does not exist."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[Float]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[Float]]"
+    )
     shared Float? getFloatOrNull(String key) {
         "Expecting a Float or Null"
         assert (is Float? val = get(key));
@@ -199,10 +199,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[Integer]]."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[Integer]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[Integer]]"
+    )
     shared Integer getInteger(String key) {
         "Expecting a Integer"
         assert (is Integer val = get(key));
@@ -210,10 +210,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[Integer]], or [[null]] if the [[key]] does not exist."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[Integer]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[Integer]]"
+    )
     shared Integer? getIntegerOrNull(String key) {
         "Expecting a Integer or Null"
         assert (is Integer? val = get(key));
@@ -221,10 +221,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[String]]."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[String]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[String]]"
+    )
     shared String getString(String key) {
         "Expecting a String"
         assert (is String val = get(key));
@@ -232,10 +232,10 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
     }
 
     "Returns a [[String]], or [[null]] if the [[key]] does not exist."
-    throws {
-        `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[String]]";
-    }
+    throws(
+        `class AssertionError`,
+        "if the key does not exist or points to a type that is not [[String]]"
+    )
     shared String? getStringOrNull(String key) {
         "Expecting a Integer or Null"
         assert (is String? val = get(key));
