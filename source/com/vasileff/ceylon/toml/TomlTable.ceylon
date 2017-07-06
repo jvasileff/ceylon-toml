@@ -1,6 +1,12 @@
 import ceylon.collection {
     MutableMap, HashMap
 }
+import ceylon.time {
+    Time, Date, DateTime
+}
+import ceylon.time.timezone {
+    ZoneDateTime
+}
 
 shared class TomlTable satisfies MutableMap<String, TomlValue> {
     HashMap<String, TomlValue> delegate;
@@ -60,25 +66,91 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
         return val;
     }
 
-    "Returns a [[TomlDateTime]]."
+    "Returns a [[Time]]."
     throws {
         `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[TomlDateTime]]";
+        "if the key does not exist or points to a type that is not [[Time]]";
     }
-    shared TomlDateTime getTomlDateTime(String key) {
-        "Expecting a TomlDateTime"
-        assert (is TomlDateTime val = get(key));
+    shared Time getTime(String key) {
+        "Expecting a Time"
+        assert (is Time val = get(key));
         return val;
     }
 
-    "Returns a [[TomlDateTime]], or [[null]] if the [[key]] does not exist."
+    "Returns a [[Time]], or [[null]] if the [[key]] does not exist."
     throws {
         `class AssertionError`;
-        "if the key does not exist or points to a type that is not [[TomlDateTime]]";
+        "if the key does not exist or points to a type that is not [[Time]]";
     }
-    shared TomlArray? getTomlDateTimeOrNull(String key) {
-        "Expecting a TomlDateTime or Null"
-        assert (is TomlArray? val = get(key));
+    shared Time? getTimeOrNull(String key) {
+        "Expecting a Time or Null"
+        assert (is Time? val = get(key));
+        return val;
+    }
+
+    "Returns a [[Date]]."
+    throws {
+        `class AssertionError`;
+        "if the key does not exist or points to a type that is not [[Date]]";
+    }
+    shared Date getDate(String key) {
+        "Expecting a Date"
+        assert (is Date val = get(key));
+        return val;
+    }
+
+    "Returns a [[Date]], or [[null]] if the [[key]] does not exist."
+    throws {
+        `class AssertionError`;
+        "if the key does not exist or points to a type that is not [[Date]]";
+    }
+    shared Date? getDateOrNull(String key) {
+        "Expecting a Date or Null"
+        assert (is Date? val = get(key));
+        return val;
+    }
+
+    "Returns a [[DateTime]]."
+    throws {
+        `class AssertionError`;
+        "if the key does not exist or points to a type that is not [[DateTime]]";
+    }
+    shared DateTime getDateTime(String key) {
+        "Expecting a DateTime"
+        assert (is DateTime val = get(key));
+        return val;
+    }
+
+    "Returns a [[DateTime]], or [[null]] if the [[key]] does not exist."
+    throws {
+        `class AssertionError`;
+        "if the key does not exist or points to a type that is not [[DateTime]]";
+    }
+    shared DateTime? getDateTimeOrNull(String key) {
+        "Expecting a DateTime or Null"
+        assert (is DateTime? val = get(key));
+        return val;
+    }
+
+    "Returns a [[ZoneDateTime]]."
+    throws {
+        `class AssertionError`;
+        "if the key does not exist or points to a type that is not [[ZoneDateTime]]";
+    }
+    shared ZoneDateTime getZoneDateTime(String key) {
+        "Expecting a ZoneDateTime"
+        assert (is ZoneDateTime val = get(key));
+        return val;
+    }
+
+    "Returns a [[ZoneDateTime]], or [[null]] if the [[key]] does not exist."
+    throws {
+        `class AssertionError`;
+        "if the key does not exist or points to a type that is not [[ZoneDateTime]]";
+    }
+    shared ZoneDateTime? getZoneDateTimeOrNull(String key) {
+        "Expecting a ZoneDateTime or Null"
+        assert (is ZoneDateTime? val = get(key));
         return val;
     }
 
