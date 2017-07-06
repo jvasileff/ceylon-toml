@@ -32,7 +32,7 @@ install:
 script:
   - ceylon compile,compile-js,compile-dart
   - ceylon test,test-js $TEST_MODULE
-  - ceylon doc $LIBRARY_MODULE
+  - ceylon doc --source-code --link https://modules.ceylon-lang.org/repo/1 $LIBRARY_MODULE
 env:
   global:
     - CEYLON="http://ceylon-lang.org/download/dist/1_3_2"
