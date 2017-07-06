@@ -4,6 +4,9 @@ import com.vasileff.ceylon.toml {
 import ceylon.collection {
     IdentitySet
 }
+import ceylon.time.timezone {
+    TimeZone, ZoneDateTime, timeZone, zoneDateTime
+}
 import ceylon.time {
     Time, Date, DateTime,
     time, date, dateTime
@@ -324,7 +327,39 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return time(hours, minutes, seconds, millis);
     }
 
-    Date | DateTime parseDateTime(Token? leadingDigitsToken = null) {
+    TimeZone parseTimeZone() {
+        if (accept(zuluCharacter)) {
+            return timeZone.offset(0);
+        }
+
+        value sign
+            =   switch (consume([plus, minus].contains,
+                        "expected 'Z', '+' or '-' for timezone offset").type)
+                case (plus) 1
+                else -1;
+
+        value hours = consumeDigits {
+            null;
+            count = 2;
+            errorCount = "expected two digits for hours";
+            range = 0..23;
+            errorRange = "hours must be between 00 and 23";
+        };
+
+        consume(colon, "expected ':'");
+
+        value minutes = consumeDigits {
+            null;
+            count = 2;
+            errorCount = "expected two digits for minutes";
+            range = 0..59;
+            errorRange = "hours must be between 00 and 59";
+        };
+
+        return timeZone.offset(sign * hours, sign * minutes, 0);
+    }
+
+    Date | DateTime | ZoneDateTime parseDateTime(Token? leadingDigitsToken = null) {
         value year = consumeDigits {
             leadingDigitsToken;
             count = 4;
@@ -348,16 +383,23 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         };
 
         value timePart = accept(timeCharacter) then parseTime();
-        if (exists timePart) {
+
+        if (!exists timePart) {
+            return date(year, month, day);
+        }
+
+        value zone = peek().type in [zuluCharacter, minus, plus] then parseTimeZone();
+
+        if (!exists zone) {
             return dateTime(year, month, day, timePart.hours, timePart.minutes,
                     timePart.seconds, timePart.milliseconds);
         }
-        return date(year, month, day);
 
-        // TODO offset
+        return zoneDateTime(zone, year, month, day, timePart.hours, timePart.minutes,
+                    timePart.seconds, timePart.milliseconds);
     }
 
-    Integer | Float | Time | Date | DateTime parseNumberOrDate() {
+    Integer | Float | Time | Date | DateTime | ZoneDateTime parseNumberOrDate() {
         if (check(eof)) {
             throw error(peek(), "expected a value");
         }

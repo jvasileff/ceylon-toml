@@ -13,5 +13,6 @@ shared void run() {
     times.test();
     localDates.test();
     localDateTimes.test();
+    offsetDateTimes.test();
     print("tests complete");
 }

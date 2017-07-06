@@ -7,7 +7,7 @@ import com.vasileff.ceylon.toml {
 
 void checkValue(
         String input,
-        TomlValue expected,
+        TomlValue? expected,
         Boolean withError = false,
         Boolean eofAfter = true) {
 
