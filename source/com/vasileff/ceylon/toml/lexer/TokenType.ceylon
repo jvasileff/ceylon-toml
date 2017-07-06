@@ -105,6 +105,9 @@ shared object exponentCharacter extends TokenType("exponentCharacter") {}
 "The character 'z' or 'Z'"
 shared object zuluCharacter extends TokenType("zuluCharacter") {}
 
+"The character 'T'"
+shared object timeCharacter extends TokenType("timeCharacter") {}
+
 "The string 'true'"
 shared object trueKeyword extends TokenType("trueKeyword") {}
 

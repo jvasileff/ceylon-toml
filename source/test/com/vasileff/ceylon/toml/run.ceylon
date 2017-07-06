@@ -10,5 +10,8 @@ shared void run() {
     mlBasicStrings.test();
     mlLiteralStrings.test();
     tables.test();
+    times.test();
+    localDates.test();
+    localDateTimes.test();
     print("tests complete");
 }

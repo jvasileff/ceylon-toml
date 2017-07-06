@@ -4,6 +4,10 @@ import com.vasileff.ceylon.toml {
 import ceylon.collection {
     IdentitySet
 }
+import ceylon.time {
+    Time, Date, DateTime,
+    time, date, dateTime
+}
 import com.vasileff.ceylon.toml.lexer {
     ...
 }
@@ -269,7 +273,91 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         }
     }
 
-    Integer | Float parseNumberOrDate() { // | Date
+    Integer consumeDigits(
+            Token? token, Integer count, String errorCount,
+            Range<Integer>? range = null, String? errorRange = null) {
+        value t = token else consume(digits, errorCount);
+        if (t.text.size != count) {
+            throw error(t, errorCount);
+        }
+        assert (is Integer result = Integer.parse(t.text));
+        if (exists range, !result in range) {
+            throw error(t, errorRange);
+        }
+        return result;
+    }
+
+    Time parseTime(Token? leadingDigitsToken = null) {
+        value hours = consumeDigits {
+            leadingDigitsToken;
+            count = 2;
+            errorCount = "expected two digits for hours";
+            range = 0..23;
+            errorRange = "hours must be between 00 and 23";
+        };
+        consume(colon, "expected ':'");
+        value minutes = consumeDigits {
+            null;
+            count = 2;
+            errorCount = "expected two digits for minutes";
+            range = 0..59;
+            errorRange = "hours must be between 00 and 59";
+        };
+        consume(colon, "expected ':'");
+        value seconds = consumeDigits {
+            null;
+            count = 2;
+            errorCount = "expected two digits for seconds";
+            range = 0..59;
+            errorRange = "seconds must be between 00 and 59";
+        };
+        Integer millis;
+        if (accept(period)) {
+            value millisToken = consume(digits, "expected milliseconds");
+            assert (is Integer ms = Integer.parse(
+                        millisToken.text[0:3].padTrailing(3, '0')));
+            millis = ms;
+        }
+        else {
+            millis = 0;
+        }
+        return time(hours, minutes, seconds, millis);
+    }
+
+    Date | DateTime parseDateTime(Token? leadingDigitsToken = null) {
+        value year = consumeDigits {
+            leadingDigitsToken;
+            count = 4;
+            "expected four digits for year";
+        };
+        consume(minus, "expected '-'");
+        value month = consumeDigits {
+            null;
+            count = 2;
+            "expected 2 digits for month";
+            range = 1..31;
+            errorRange = "month must be between 01 and 12";
+        };
+        consume(minus, "expected '-'");
+        value day = consumeDigits {
+            null;
+            count = 2;
+            "expected 2 digits for day";
+            range = 1..31;
+            errorRange = "day must be between 01 and 31";
+        };
+
+        value timePart = accept(timeCharacter) then parseTime();
+        if (exists timePart) {
+            return dateTime(year, month, day, timePart.hours, timePart.minutes,
+                    timePart.seconds, timePart.milliseconds);
+        }
+        return date(year, month, day);
+
+        // TODO offset
+    }
+
+    Integer | Float | Time | Date | DateTime parseNumberOrDate() {
         if (check(eof)) {
             throw error(peek(), "expected a value");
         }
@@ -285,12 +373,10 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             return parseNumber(null, leadingDigits);
         }
         case (colon) {
-            // return parseLocalTime(leadingDigits);
-            throw error(peek(), "times are not yet supported");
+            return parseTime(leadingDigits);
         }
         case (minus) {
-            // return parseDate(leadingDigits);
-            throw error(peek(), "dates are not yet supported");
+            return parseDateTime(leadingDigits);
         }
         else {
             // it's an integer

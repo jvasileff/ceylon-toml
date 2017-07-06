@@ -30,6 +30,7 @@ shared class Lexer({Character*} characters) {
         case (',') { return t.newToken(comma); }
         case ('=') { return t.newToken(equal); }
         case ('.') { return t.newToken(period); }
+        case (':') { return t.newToken(colon); }
         case ('+') { return t.newToken(plus); }
         case ('[') {
             return t.newToken {
@@ -105,6 +106,7 @@ shared class Lexer({Character*} characters) {
             case ('E') { return t.newToken(exponentCharacter); }
             case ('z') { return t.newToken(zuluCharacter); }
             case ('Z') { return t.newToken(zuluCharacter); }
+            case ('T') { return t.newToken(timeCharacter); }
             case ('t' | 'f') {
                 t.acceptRun(or(Character.letter, Character.digit));
                 return switch (t.text())
