@@ -102,12 +102,6 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return token;
     }
 
-    Boolean check(Boolean(TokenType) | TokenType type)
-        =>  peekIf(type) exists;
-
-    Boolean checkAny(Boolean(TokenType) | TokenType+ type)
-        =>  peekIfAny(*type) exists;
-
     Token? advanceIf(Boolean(TokenType) | TokenType type) {
         value token = peekIf(type);
         if (token exists) {
@@ -145,6 +139,12 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         }
         return count;
     }
+
+    Boolean check(Boolean(TokenType) | TokenType type)
+        =>  peekIf(type) exists;
+
+    Boolean checkAny(Boolean(TokenType) | TokenType+ type)
+        =>  peekIfAny(*type) exists;
 
     Token consume(Boolean(TokenType) | TokenType type, String errorDescription) {
         if (exists token = advanceIf(type)) {
