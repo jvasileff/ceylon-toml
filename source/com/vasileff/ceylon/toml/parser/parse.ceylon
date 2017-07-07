@@ -59,7 +59,16 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return if (!is Finished token) then token else null;
     }
 
-    Token? peekIf(Boolean(TokenType) | TokenType+ type)
+    Token? peekIf(Boolean(TokenType) | TokenType type)
+        =>  let (token = peek())
+            if (exists token,
+                    if (is TokenType type)
+                    then token.type == type
+                    else type(token.type))
+            then token
+            else null;
+
+    Token? peekIfAny(Boolean(TokenType) | TokenType+ type)
         =>  let (token = peek())
             if (exists token,
                 type.any((type)
@@ -78,23 +87,45 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return token;
     }
 
-    Boolean check(Boolean(TokenType) | TokenType+ type)
-        =>  peekIf(*type) exists;
+    Boolean check(Boolean(TokenType) | TokenType type)
+        =>  peekIf(type) exists;
 
-    Token? advanceIf(Boolean(TokenType) | TokenType+ type) {
-        value token = peekIf(*type);
+    Boolean checkAny(Boolean(TokenType) | TokenType+ type)
+        =>  peekIfAny(*type) exists;
+
+    Token? advanceIf(Boolean(TokenType) | TokenType type) {
+        value token = peekIf(type);
         if (token exists) {
             advance();
         }
         return token;
     }
 
-    Boolean accept(Boolean(TokenType) | TokenType+ type)
-        =>  advanceIf(*type) exists;
+    Token? advanceIfAny(Boolean(TokenType) | TokenType+ type) {
+        value token = peekIfAny(*type);
+        if (token exists) {
+            advance();
+        }
+        return token;
+    }
 
-    Integer acceptRun(Boolean(TokenType) | TokenType+ type) {
+    Boolean accept(Boolean(TokenType) | TokenType type)
+        =>  advanceIf(type) exists;
+
+    Boolean acceptAny(Boolean(TokenType) | TokenType+ type)
+        =>  advanceIfAny(*type) exists;
+
+    Integer acceptRun(Boolean(TokenType) | TokenType type) {
         variable Integer count = 0;
-        while (accept(*type)) {
+        while (accept(type)) {
+            count++;
+        }
+        return count;
+    }
+
+    Integer acceptRunAny(Boolean(TokenType) | TokenType+ type) {
+        variable Integer count = 0;
+        while (acceptAny(*type)) {
             count++;
         }
         return count;
@@ -189,16 +220,16 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         value array = TomlArray();
         consume(openBracket, "expected '[' to start the array");
         while (!check(closeBracket)) {
-            acceptRun(comment, newline);
+            acceptRunAny(comment, newline);
             array.add(parseValue());
-            acceptRun(comment, newline);
+            acceptRunAny(comment, newline);
             if (!accept(comma)) {
                 break;
             }
-            acceptRun(comment, newline);
+            acceptRunAny(comment, newline);
         }
         accept(comma); // trailing comma ok
-        acceptRun(comment, newline);
+        acceptRunAny(comment, newline);
         consume(closeBracket, "expected ']' to end the array");
         return array;
     }
@@ -414,7 +445,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             return date(year, month, day);
         }
 
-        value zone = check(zuluCharacter, minus, plus) then parseTimeZone();
+        value zone = checkAny(zuluCharacter, minus, plus) then parseTimeZone();
 
         if (!exists zone) {
             return dateTime(year, month, day, timePart.hours, timePart.minutes,
@@ -426,7 +457,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     }
 
     Integer | Float | Time | Date | DateTime | ZoneDateTime parseNumberOrDate() {
-        if (check(plus, minus)) {
+        if (checkAny(plus, minus)) {
             return parseNumber();
         }
 
@@ -490,7 +521,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         variable value lastWasDot = true;
         variable value lastPart = null of Token?;
 
-        while (exists part = advanceIf(bareKey, basicString, literalString, period)) {
+        while (exists part = advanceIfAny(bareKey, basicString, literalString, period)) {
             lastPart = part;
 
             if (lastWasDot && part.type == period) {
