@@ -1,7 +1,6 @@
 shared class Lexer({Character*} characters) {
     shared variable LexerMode mode = LexerMode.key;
     value t = Tokenizer(characters);
-    variable value eofEmitted = false;
 
     shared T inMode<T>(LexerMode mode, T() do) {
         value save = this.mode;
@@ -15,13 +14,9 @@ shared class Lexer({Character*} characters) {
     }
 
     shared Token | Finished next() {
-        if (eofEmitted) {
-            return finished;
-        }
         value c = t.advance();
         if (!exists c) {
-            eofEmitted = true;
-            return t.newToken(eof, "");
+            return finished;
         }
 
         switch (c)

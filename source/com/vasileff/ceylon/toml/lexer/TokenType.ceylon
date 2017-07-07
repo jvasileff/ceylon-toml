@@ -114,8 +114,5 @@ shared object trueKeyword extends TokenType("trueKeyword") {}
 "The string 'false'"
 shared object falseKeyword extends TokenType("falseKeyword") {}
 
-"End of file token"
-shared object eof extends TokenType("eof") {}
-
 "An unexpected token"
 shared object error extends TokenType("error") {}

@@ -22,7 +22,6 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     variable [ParseException*] errors = [];
     variable Token | Finished | Null nextToken = null;
     variable value currentTable = result;
-    value eofToken = Token(eof, "", -1, -1, -1, []);
     value createdButNotDefined = IdentitySet<TomlTable>();
 
     String formatToken(Token token)
@@ -31,72 +30,93 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             else if (token.text.shorterThan(10)) then "'``token.text``'"
             else "'``token.text[...10]``...'";
 
-    ParseException error(Token token, String? description = null) {
+    ParseException error(Token? token, String? description = null) {
         // TODO this is no good for errors like:
         // error: unexpected '['; table [first-Table] has already been defined at 75:1
         value sb = StringBuilder();
         sb.append("unexpected ");
-        sb.append(formatToken(token));
+        if (!exists token) {
+            sb.append("end-of-file");
+        }
+        else {
+            sb.append(formatToken(token));
+        }
         if (exists description) {
             sb.append("; ");
             sb.append(description);
         }
-        sb.append(" at ``token.line``:``token.column``");
+        if (exists token) {
+            sb.append(" at ``token.line``:``token.column``");
+        }
         value exception = ParseException(token, sb.string);
         errors = errors.withTrailing(exception);
         return exception;
     }
 
-    Token peek() {
-        value t = nextToken else lexer.next();
-        nextToken = t;
-        return if (is Token t) then t else eofToken;
+    Token? peek() {
+        value token = nextToken else lexer.next();
+        nextToken = token;
+        return if (!is Finished token) then token else null;
+    }
+
+    Token? peekIf(Boolean(TokenType) | TokenType+ type)
+        =>  let (token = peek())
+            if (exists token,
+                type.any((type)
+                    =>  if (is TokenType type)
+                        then token.type == type
+                        else type(token.type)))
+            then token
+            else null;
+
+    Token? advance() {
+        value token = peek();
+        nextToken = null;
+        if (exists token) {
+            errors = concatenate(errors, token.errors);
+        }
+        return token;
     }
 
     Boolean check(Boolean(TokenType) | TokenType+ type)
-        =>  let (p = peek().type)
-            type.any((type)
-                =>  if (is TokenType type)
-                    then p == type
-                    else type(p));
+        =>  peekIf(*type) exists;
 
-    Token advance() {
-        value result = peek();
-        nextToken = null;
-        errors = concatenate(errors, result.errors);
-        return result;
-    }
-
-    Boolean accept(Boolean(TokenType) | TokenType+ type) {
-        if (check(*type)) {
+    Token? advanceIf(Boolean(TokenType) | TokenType+ type) {
+        value token = peekIf(*type);
+        if (token exists) {
             advance();
-            return true;
         }
-        return false;
+        return token;
     }
 
-    [Token*] acceptRun(Boolean(TokenType) | TokenType+ type) {
-        variable {Token*} result = [];
-        while (check(*type)) {
-            result = result.follow(advance());
+    Boolean accept(Boolean(TokenType) | TokenType+ type)
+        =>  advanceIf(*type) exists;
+
+    Integer acceptRun(Boolean(TokenType) | TokenType+ type) {
+        variable Integer count = 0;
+        while (accept(*type)) {
+            count++;
         }
-        return result.sequence().reversed;
+        return count;
     }
 
     Token consume(Boolean(TokenType) | TokenType type, String errorDescription) {
-        if (check(type)) {
-            return advance();
+        if (exists token = advanceIf(type)) {
+            return token;
         }
         throw error(peek(), errorDescription);
     }
 
+    Boolean endOfFile
+        =>  !peek() exists;
+
     shared actual [TomlTable, ParseException*] get() {
-        while (!check(eof)) {
+        while (!endOfFile) {
             try {
                 lexer.inMode(LexerMode.key, parseLine);
             }
             catch (ParseException e) {
-                acceptRun(not([newline, eof].contains));
+                acceptRun(not('\n'.equals));
             }
         }
         return [result, *errors];
@@ -154,7 +174,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             key : word | basicString | literalString
      """
     String parseKey() {
-        switch(peek().type)
+        switch(peek()?.type)
         case (bareKey) { return parseBareKey(); }
         case (basicString) { return parseBasicString(); }
         case (literalString) { return parseLiteralString(); }
@@ -394,7 +414,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             return date(year, month, day);
         }
 
-        value zone = peek().type in [zuluCharacter, minus, plus] then parseTimeZone();
+        value zone = check(zuluCharacter, minus, plus) then parseTimeZone();
 
         if (!exists zone) {
             return dateTime(year, month, day, timePart.hours, timePart.minutes,
@@ -406,17 +426,13 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     }
 
     Integer | Float | Time | Date | DateTime | ZoneDateTime parseNumberOrDate() {
-        if (check(eof)) {
-            throw error(peek(), "expected a value");
-        }
-
         if (check(plus, minus)) {
             return parseNumber();
         }
 
         value leadingDigits = consume(digits, "expected digits");
 
-        switch (peek().type)
+        switch (peek()?.type)
         case (underscore | exponentCharacter) {
             return parseNumber(null, leadingDigits);
         }
@@ -437,7 +453,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
      """
     TomlValue parseValue() {
         value token = peek();
-        switch (type = token.type)
+        switch (type = token?.type)
         case (basicString) { return parseBasicString(); }
         case (multilineBasicString) { return parseMultilineBasicString(); }
         case (literalString) { return parseLiteralString(); }
@@ -462,16 +478,21 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     }
 
     [String*] parseKeyPath() {
-        variable Token part = peek();
-        variable {String*} result = [];
-        variable value lastWasDot = true;
-
-        if (part.type == period) {
-            throw error(part, "table name may not start with '.'");
+        switch (p = peek())
+        case (null) {
+            throw error(null, "expected a key");
+        }
+        else if (p.type == period) {
+            throw error(p, "table name may not start with '.'");
         }
 
-        while (check(bareKey, basicString, literalString, period)) {
-            part = advance();
+        variable {String*} result = [];
+        variable value lastWasDot = true;
+        variable value lastPart = null of Token?;
+
+        while (exists part = advanceIf(bareKey, basicString, literalString, period)) {
+            lastPart = part;
+
             if (lastWasDot && part.type == period) {
                 throw error(part, "consecutive '.'s may not exist between keys");
             }
@@ -499,7 +520,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         }
 
         if (lastWasDot) {
-            throw error(part, "table name may not end with '.'");
+            throw error(lastPart, "table name may not end with '.'");
         }
 
         return result.sequence().reversed;
@@ -582,27 +603,27 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             line : comment | newline | keyValuePair | table | arrayOfTables
      """
     void parseLine() {
-        switch (t = peek().type)
+        switch (peek()?.type)
         case (comment) { advance(); }
         case (newline) { advance(); }
         case (bareKey | basicString | literalString) {
             currentTable.putAll { parseKeyValuePair() };
             accept(comment);
-            if (!accept(newline, eof)) {
+            if (!endOfFile && !accept(newline)) {
                 throw error(peek(), "expected a newline or eof after key/value pair");
             }
         }
         case (openBracket) {
             parseTable();
             accept(comment);
-            if (!accept(newline, eof)) {
+            if (!endOfFile && !accept(newline)) {
                 throw error(peek(), "expected a newline or eof after table header");
             }
         }
         case (doubleOpenBracket) {
             parseArrayOfTables();
             accept(comment);
-            if (!accept(newline, eof)) {
+            if (!endOfFile && !accept(newline)) {
                 throw error(peek(),
                         "expected a newline or eof after array of tables header");
             }
