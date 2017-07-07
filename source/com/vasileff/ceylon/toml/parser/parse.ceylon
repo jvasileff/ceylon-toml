@@ -68,15 +68,23 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             then token
             else null;
 
-    Token? peekIfAny(Boolean(TokenType) | TokenType+ type)
-        =>  let (token = peek())
-            if (exists token,
-                type.any((type)
-                    =>  if (is TokenType type)
-                        then token.type == type
-                        else type(token.type)))
-            then token
-            else null;
+    Token? peekIfAny(Boolean(TokenType) | TokenType+ type) {
+        value token = peek();
+        if (!exists token) {
+            return null;
+        }
+        for (t in type) {
+            if (is TokenType t) {
+                if (t == token.type) {
+                    return token;
+                }
+            }
+            else if (t(token.type)) {
+                return token;
+            }
+        }
+        return null;
+    }
 
     Token? advance() {
         value token = peek();
