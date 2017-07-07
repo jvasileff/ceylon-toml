@@ -54,11 +54,9 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     }
 
     "Return the next token, or null if there is no next token; do not advance."
-    Token? peek() {
-        value token = nextToken else lexer.next();
-        nextToken = token;
-        return if (!is Finished token) then token else null;
-    }
+    Token? peek()
+        =>  let (token = nextToken else (nextToken = lexer.next()))
+            if (!is Finished token) then token else null;
 
     "Return the next token if one exists and it matches [[type]]; do not advance."
     Token? peekIf(Boolean(TokenType) | TokenType type) {
