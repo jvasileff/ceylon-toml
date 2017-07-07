@@ -53,12 +53,14 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return exception;
     }
 
+    "Return the next token, or null if there is no next token; do not advance."
     Token? peek() {
         value token = nextToken else lexer.next();
         nextToken = token;
         return if (!is Finished token) then token else null;
     }
 
+    "Return the next token if one exists and it matches [[type]]; do not advance."
     Token? peekIf(Boolean(TokenType) | TokenType type) {
         value token = peek();
         if (!exists token) {
@@ -75,24 +77,27 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return null;
     }
 
-    Token? peekIfAny(Boolean(TokenType) | TokenType+ type) {
+    "Return the next token if one exists and it matches any of the given [[types]];
+     do not advance."
+    Token? peekIfAny(Boolean(TokenType) | TokenType+ types) {
         value token = peek();
         if (!exists token) {
             return null;
         }
-        for (t in type) {
-            if (is TokenType t) {
-                if (t == token.type) {
+        for (type in types) {
+            if (is TokenType type) {
+                if (type == token.type) {
                     return token;
                 }
             }
-            else if (t(token.type)) {
+            else if (type(token.type)) {
                 return token;
             }
         }
         return null;
     }
 
+    "Advance and return the next token if one exists."
     Token? advance() {
         value token = peek();
         nextToken = null;
@@ -102,6 +107,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return token;
     }
 
+    "Advance and return the next token if one exists and it matches [[type]]."
     Token? advanceIf(Boolean(TokenType) | TokenType type) {
         value token = peekIf(type);
         if (token exists) {
@@ -110,20 +116,28 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return token;
     }
 
-    Token? advanceIfAny(Boolean(TokenType) | TokenType+ type) {
-        value token = peekIfAny(*type);
+    "Advance and return the next token if one exists and it matches any of the given
+     [[types]]."
+    Token? advanceIfAny(Boolean(TokenType) | TokenType+ types) {
+        value token = peekIfAny(*types);
         if (token exists) {
             advance();
         }
         return token;
     }
 
+    "Advance to the next token and return `true` if one exists and it matches [[type]];
+     otherwise return `false`."
     Boolean accept(Boolean(TokenType) | TokenType type)
         =>  advanceIf(type) exists;
 
-    Boolean acceptAny(Boolean(TokenType) | TokenType+ type)
-        =>  advanceIfAny(*type) exists;
+    "Advance to the next token and return `true` if one exists and it matches any of the
+     given [[types]]; otherwise return `false`"
+    Boolean acceptAny(Boolean(TokenType) | TokenType+ types)
+        =>  advanceIfAny(*types) exists;
 
+    "Advance until a token is reached that does not match [[type]]; return the number
+     of tokens advanced, which is also the number of matched tokens."
     Integer acceptRun(Boolean(TokenType) | TokenType type) {
         variable Integer count = 0;
         while (accept(type)) {
@@ -132,20 +146,27 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return count;
     }
 
-    Integer acceptRunAny(Boolean(TokenType) | TokenType+ type) {
+    "Advance until a token is reached that does not match any of the given [[types]];
+     return the number of tokens advanced, which is also the number of matched tokens."
+    Integer acceptRunAny(Boolean(TokenType) | TokenType+ types) {
         variable Integer count = 0;
-        while (acceptAny(*type)) {
+        while (acceptAny(*types)) {
             count++;
         }
         return count;
     }
 
+    "Return true if the next token exists and matches [[type]]; do not advance."
     Boolean check(Boolean(TokenType) | TokenType type)
         =>  peekIf(type) exists;
 
-    Boolean checkAny(Boolean(TokenType) | TokenType+ type)
-        =>  peekIfAny(*type) exists;
+    "Return true if the next token exists and matches any of the given [[types]]; do not
+     advance."
+    Boolean checkAny(Boolean(TokenType) | TokenType+ types)
+        =>  peekIfAny(*types) exists;
 
+    "Advance past the next token which must be of the given [[type]], or raise an error
+     if the next token does not exist or does not match the given `type`."
     Token consume(Boolean(TokenType) | TokenType type, String errorDescription) {
         if (exists token = advanceIf(type)) {
             return token;
@@ -153,6 +174,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         throw error(peek(), errorDescription);
     }
 
+    "Return true if there is no next token."
     Boolean endOfFile
         =>  !peek() exists;
 
