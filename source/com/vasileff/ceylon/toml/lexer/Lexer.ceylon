@@ -202,20 +202,27 @@ shared class Lexer({Character*} characters) {
         t.error("unterminated string");
         return sb.string;
     }
-
-    Boolean isBareKeyCharacter(Character c)
-        =>     c.letter
-            || c.digit
-            || c in "_-";
-
-    Boolean isCommentCharacter(Character c)
-        =>     c in '\{#20}'..'\{#10ffff}'
-            || c == '\t';
-
-    Boolean isDigit(Character c)
-        =>     c in '0'..'9';
-
-    Boolean isHexDigit(Character c)
-        =>     c in '0'..'9'
-            || c in 'A'..'F';
 }
+
+Boolean anyCharacter
+        (Character | {Character*} | Boolean(Character)* patterns)
+        (Character c)
+    =>  patterns.any((p)
+        =>  switch (p)
+            case (is Character) c == p
+            case (is {Anything*}) c in p
+            else p(c));
+
+Boolean(Character) isBareKeyCharacter = anyCharacter(
+    Character.letter, Character.digit, "_-"
+);
+
+Boolean(Character) isCommentCharacter = anyCharacter(
+    '\{#20}'..'\{#10ffff}', '\t'
+);
+
+Boolean(Character) isDigit = ('0'..'9').contains;
+
+Boolean(Character) isHexDigit = anyCharacter(
+    '0'..'9', 'A'..'F'
+);
