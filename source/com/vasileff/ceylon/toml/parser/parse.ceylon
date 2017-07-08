@@ -59,13 +59,18 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             if (!is Finished token) then token else null;
 
     "Return the next token if one exists and it matches [[type]]; do not advance."
-    Token? peekIf(Boolean(TokenType) | TokenType type) {
+    Token? peekIf(TokenType | {TokenType*} | Boolean(TokenType) type) {
         value token = peek();
         if (!exists token) {
             return null;
         }
         if (is TokenType type) {
             if (type == token.type) {
+                return token;
+            }
+        }
+        else if (is {Anything*} type) {
+            if (token.type in type) {
                 return token;
             }
         }
@@ -86,7 +91,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     }
 
     "Advance and return the next token if one exists and it matches [[type]]."
-    Token? advanceIf(Boolean(TokenType) | TokenType type) {
+    Token? advanceIf(TokenType | {TokenType*} | Boolean(TokenType) type) {
         value token = peekIf(type);
         if (token exists) {
             advance();
@@ -96,12 +101,12 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
 
     "Advance to the next token and return `true` if one exists and it matches [[type]];
      otherwise return `false`."
-    Boolean accept(Boolean(TokenType) | TokenType type)
+    Boolean accept(TokenType | {TokenType*} | Boolean(TokenType) type)
         =>  advanceIf(type) exists;
 
     "Advance until a token is reached that does not match [[type]]; return the number
      of tokens advanced, which is also the number of matched tokens."
-    Integer acceptRun(Boolean(TokenType) | TokenType type) {
+    Integer acceptRun(TokenType | {TokenType*} | Boolean(TokenType) type) {
         variable Integer count = 0;
         while (accept(type)) {
             count++;
@@ -110,12 +115,14 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     }
 
     "Return true if the next token exists and matches [[type]]; do not advance."
-    Boolean check(Boolean(TokenType) | TokenType type)
+    Boolean check(TokenType | {TokenType*} | Boolean(TokenType) type)
         =>  peekIf(type) exists;
 
     "Advance past the next token which must be of the given [[type]], or raise an error
      if the next token does not exist or does not match the given `type`."
-    Token consume(Boolean(TokenType) | TokenType type, String errorDescription) {
+    Token consume(
+            TokenType | {TokenType*} | Boolean(TokenType) type,
+            String errorDescription) {
         if (exists token = advanceIf(type)) {
             return token;
         }
@@ -205,16 +212,16 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         value array = TomlArray();
         consume(openBracket, "expected '[' to start the array");
         while (!check(closeBracket)) {
-            acceptRun(anyToken(comment, newline));
+            acceptRun([comment, newline]);
             array.add(parseValue());
-            acceptRun(anyToken(comment, newline));
+            acceptRun([comment, newline]);
             if (!accept(comma)) {
                 break;
             }
-            acceptRun(anyToken(comment, newline));
+            acceptRun([comment, newline]);
         }
         accept(comma); // trailing comma ok
-        acceptRun(anyToken(comment, newline));
+        acceptRun([comment, newline]);
         consume(closeBracket, "expected ']' to end the array");
         return array;
     }
@@ -430,7 +437,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             return date(year, month, day);
         }
 
-        value zone = check(anyToken(zuluCharacter, minus, plus)) then parseTimeZone();
+        value zone = check([zuluCharacter, minus, plus]) then parseTimeZone();
 
         if (!exists zone) {
             return dateTime(year, month, day, timePart.hours, timePart.minutes,
@@ -442,7 +449,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     }
 
     Integer | Float | Time | Date | DateTime | ZoneDateTime parseNumberOrDate() {
-        if (check(anyToken(plus, minus))) {
+        if (check([plus, minus])) {
             return parseNumber();
         }
 
@@ -506,8 +513,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         variable value lastWasDot = true;
         variable value lastPart = null of Token?;
 
-        while (exists part = advanceIf(anyToken(
-                bareKey, basicString, literalString, period))) {
+        while (exists part = advanceIf([bareKey, basicString, literalString, period])) {
             lastPart = part;
 
             if (lastWasDot && part.type == period) {
@@ -669,9 +675,3 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
 interface Producer<T> {
     shared formal T get();
 }
-
-Boolean anyToken(TokenType | {TokenType*} | Boolean(TokenType)* patterns)(TokenType t)
-    =>  patterns.any((p)
-        =>  if (is TokenType p) then t == p
-            else if (is {Anything*} p) then t in p
-            else p(t));
