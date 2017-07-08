@@ -53,48 +53,28 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return exception;
     }
 
-    "Return the next token, or null if there is no next token; do not advance."
-    Token? peek()
+    "Return the next token if one exists and it matches [[type]]; do not advance. Use
+     `true` or no-argument to match any token type."
+    Token? peek(Boolean | TokenType | {TokenType*} | Boolean(TokenType) type = true)
         =>  let (token = nextToken else (nextToken = lexer.next()))
-            if (!is Finished token) then token else null;
+            if (is Finished token) then
+                null
+            else if (is Boolean type) then
+                (type then token)
+            else if (is TokenType type) then
+                (type == token.type then token)
+            else if (is {Anything*} type) then
+                (token.type in type then token)
+            else
+                (type(token.type) then token);
 
-    "Return the next token if one exists and it matches [[type]]; do not advance."
-    Token? peekIf(TokenType | {TokenType*} | Boolean(TokenType) type) {
-        value token = peek();
-        if (!exists token) {
-            return null;
-        }
-        if (is TokenType type) {
-            if (type == token.type) {
-                return token;
-            }
-        }
-        else if (is {Anything*} type) {
-            if (token.type in type) {
-                return token;
-            }
-        }
-        else if (type(token.type)) {
-            return token;
-        }
-        return null;
-    }
-
-    "Advance and return the next token if one exists."
-    Token? advance() {
-        value token = peek();
-        nextToken = null;
+    "Advance and return the next token if one exists and it matches [[type]]. Use `true`
+     or no-argument to match any token type."
+    Token? advance(Boolean | TokenType | {TokenType*} | Boolean(TokenType) type = true) {
+        value token = peek(type);
         if (exists token) {
+            nextToken = null;
             errors = concatenate(errors, token.errors);
-        }
-        return token;
-    }
-
-    "Advance and return the next token if one exists and it matches [[type]]."
-    Token? advanceIf(TokenType | {TokenType*} | Boolean(TokenType) type) {
-        value token = peekIf(type);
-        if (token exists) {
-            advance();
         }
         return token;
     }
@@ -102,7 +82,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     "Advance to the next token and return `true` if one exists and it matches [[type]];
      otherwise return `false`."
     Boolean accept(TokenType | {TokenType*} | Boolean(TokenType) type)
-        =>  advanceIf(type) exists;
+        =>  advance(type) exists;
 
     "Advance until a token is reached that does not match [[type]]; return the number
      of tokens advanced, which is also the number of matched tokens."
@@ -116,14 +96,14 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
 
     "Return true if the next token exists and matches [[type]]; do not advance."
     Boolean check(TokenType | {TokenType*} | Boolean(TokenType) type)
-        =>  peekIf(type) exists;
+        =>  peek(type) exists;
 
     "Advance past the next token which must be of the given [[type]], or raise an error
      if the next token does not exist or does not match the given `type`."
     Token consume(
             TokenType | {TokenType*} | Boolean(TokenType) type,
             String errorDescription) {
-        if (exists token = advanceIf(type)) {
+        if (exists token = advance(type)) {
             return token;
         }
         throw error(peek(), errorDescription);
@@ -513,7 +493,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         variable value lastWasDot = true;
         variable value lastPart = null of Token?;
 
-        while (exists part = advanceIf([bareKey, basicString, literalString, period])) {
+        while (exists part = advance([bareKey, basicString, literalString, period])) {
             lastPart = part;
 
             if (lastWasDot && part.type == period) {
