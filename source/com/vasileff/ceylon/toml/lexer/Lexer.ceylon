@@ -14,12 +14,8 @@ shared class Lexer({Character*} characters) {
     }
 
     shared Token | Finished next() {
-        value c = t.advance();
-        if (!exists c) {
-            return finished;
-        }
-
-        switch (c)
+        switch (c = t.advance())
+        case (null) { return finished; }
         case ('{') { return t.newToken(openBrace); }
         case ('}') { return t.newToken(closeBrace); }
         case (',') { return t.newToken(comma); }
