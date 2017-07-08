@@ -213,16 +213,14 @@ Boolean anyCharacter
             case (is {Anything*}) c in p
             else p(c));
 
-Boolean(Character) isBareKeyCharacter = anyCharacter(
-    Character.letter, Character.digit, "_-"
-);
+Boolean(Character) isBareKeyCharacter
+    =   anyCharacter(Character.letter, Character.digit, "_-");
 
-Boolean(Character) isCommentCharacter = anyCharacter(
-    '\{#20}'..'\{#10ffff}', '\t'
-);
+Boolean(Character) isCommentCharacter
+    =   anyCharacter('\{#20}'..'\{#10ffff}', '\t');
 
-Boolean(Character) isDigit = ('0'..'9').contains;
+Boolean(Character) isDigit
+    =   ('0'..'9').contains;
 
-Boolean(Character) isHexDigit = anyCharacter(
-    '0'..'9', 'A'..'F'
-);
+Boolean(Character) isHexDigit
+    =   anyCharacter('0'..'9', 'A'..'F');
