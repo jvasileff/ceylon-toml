@@ -249,6 +249,31 @@ shared class TomlTable satisfies MutableMap<String, TomlValue> {
 
     iterator() => delegate.iterator();
     clear() => clear();
-    equals(Object other) => delegate.equals(other);
     hash => delegate.hash;
+
+    // workaround https://github.com/ceylon/ceylon-sdk/issues/675
+    // and https://github.com/ceylon/ceylon/issues/7131
+    // equals(Object other) => delegate.equals(other);
+    shared actual default Boolean equals(Object that) {
+        if (is Map<Object,Anything> that,
+            that.size==size) {
+            for (key -> thisItem in this) {
+                value thatItem = that[key];
+                if (exists thatItem) {
+                    if (thisItem!=thatItem) {
+                        return false;
+                    }
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                return true;
+            }
+        }
+        else {
+            return false;
+        }
+    }
 }
