@@ -547,6 +547,14 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 return newTable;
             }
             else {
+                // just add to the last table in the array, if possible
+                if (is TomlArray obj, is TomlTable last = obj.last) {
+                    // TODO this seems kind of hokey. Is it ok if the table was an
+                    //      inline table? Do we care if the source doc has elements
+                    //      between the [[whatever.key]] and the [whatever.key.key]?
+                    // TODO add tests
+                    return last;
+                }
                 currentTable = TomlTable(); // ignore subsequent key/value pairs
                 // TODO actually provide the leading key path... (can't use fold)
                 throw error(openToken, "a value already exists for the given key");
