@@ -2,6 +2,7 @@ import com.vasileff.ceylon.toml.parser {
     parse
 }
 
+"Parse a TOML document."
 shared TomlTable | TomlParseException parseToml({Character*} input) {
     value [result, *errors] = parse(input);
     if (nonempty errors) {

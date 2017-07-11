@@ -146,6 +146,47 @@
         // process(result);
     }
     ```
+
+    # Generating TOML Documents
+
+    [[generateToml]] can be used to generate a TOML document from a [[TomlTable]] or a
+    `Map<Anything, Anything>`. In either case, the argument must represent a valid TOML
+    document, with [[String]]s for keys and [[TomlValue]]s, ``Map``s, or ``List``s for
+    values.
+
+    The code below produces a portion of the "Exampe TOML Document":
+
+     ```ceylon
+        import ceylon.time.timezone {
+            zoneDateTime, timeZone
+        }
+        import com.vasileff.ceylon.toml {
+            TomlTable, TomlArray
+        }
+
+        shared void run() {
+            value document = TomlTable {
+                "title" -> "TOML Example",
+                "owner" -> TomlTable {
+                    "name" -> "Tom Preston-Werner",
+                    "dob" -> zoneDateTime {
+                        timeZone = timeZone.offset {
+                            hours = -8;
+                        };
+                        year = 1979;
+                        month = 5;
+                        date = 27;
+                        hour = 7;
+                        minutes = 32;
+                    }
+                },
+                "hosts" -> TomlArray {
+                    "alpha", "omega"
+                }
+            };
+            ...
+        }
+     ```
  """
 module com.vasileff.ceylon.toml "0.0.0" {
     shared import ceylon.time "1.3.2";
