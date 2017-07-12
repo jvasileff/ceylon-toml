@@ -2,7 +2,7 @@ import ceylon.test {
     test, assertEquals
 }
 import com.vasileff.ceylon.toml {
-    parseToml, TomlParseException
+    parseToml, generateToml, TomlParseException
 }
 import ceylon.json {
     parseJson = parse,
@@ -25,14 +25,23 @@ object tomlDistTests {
         assertEquals(toml, json);
     }
 
+    void roundTrip(String filename) {
+        assert (exists tomlText
+            =   `module`.resourceByPath("``filename``.toml")
+                        ?.textContent("UTF-8"));
+
+        assert (!is TomlParseException toml = parseToml(tomlText));
+        value tomlText2 = generateToml(toml);
+        assert (!is TomlParseException toml2 = parseToml(tomlText2));
+        assertEquals(toml, toml2);
+    }
+
     // NOTE the date-time "dob" example.toml was changed to a String since
     //      json doesn't support first class dates
-    shared test void example()
-        =>  runTest("example");
-
-    shared test void fruit()
-        =>  runTest("fruit");
-
-    shared test void hardExample()
-        =>  runTest("hard_example");
+    shared test void example() => runTest("example");
+    shared test void fruit() => runTest("fruit");
+    shared test void hardExample() => runTest("hard_example");
+    shared test void exampleRoundTrip() => roundTrip("example");
+    shared test void fruitRoundTrip() => roundTrip("fruit");
+    shared test void hardExampleRoundTrip() => roundTrip("hard_example");
 }
