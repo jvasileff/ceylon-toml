@@ -46,5 +46,5 @@ object tomlDistTests {
     shared test void hardExampleRoundTrip() => roundTrip("hard_example");
 
     ignore
-    shared test void exampleV040RoundTrip() => roundTrip("example-v0.4.0");
+    shared test void exampleV040RoundTrip() => roundTrip("example-v0.4.0-modified");
 }
