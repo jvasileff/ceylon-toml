@@ -1,5 +1,5 @@
 import ceylon.test {
-    test, assertEquals
+    test, assertEquals, ignore
 }
 import com.vasileff.ceylon.toml {
     parseToml, generateToml, TomlParseException
@@ -44,4 +44,7 @@ object tomlDistTests {
     shared test void exampleRoundTrip() => roundTrip("example");
     shared test void fruitRoundTrip() => roundTrip("fruit");
     shared test void hardExampleRoundTrip() => roundTrip("hard_example");
+
+    ignore
+    shared test void exampleV040RoundTrip() => roundTrip("example-v0.4.0");
 }
