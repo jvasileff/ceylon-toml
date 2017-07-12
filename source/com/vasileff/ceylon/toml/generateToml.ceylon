@@ -151,7 +151,16 @@ shared String generateToml(Map<Anything, Anything> tomlTable)
         case (is String) {
             emitStringValue(item);
         }
-        case (is Integer | Float | Boolean) {
+        case (is Float) {
+            if (item.infinite) {
+                throw error("infinite floating point values not allowed");
+            }
+            if (item.undefined) {
+                throw error("undefined (NaN) floating point values not allowed");
+            }
+            sb.append(item.string);
+        }
+        case (is Integer | Boolean) {
             sb.append(item.string);
         }
         else if (is Time | Date | DateTime | ZoneDateTime item) {
