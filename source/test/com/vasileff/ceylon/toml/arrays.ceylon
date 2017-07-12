@@ -1,5 +1,5 @@
 import ceylon.test {
-    test, ignore, assertTrue
+    test, assertTrue
 }
 import com.vasileff.ceylon.toml {
     parseToml, TomlParseException, TomlArray
@@ -22,7 +22,7 @@ shared object arrays {
 
     shared void test() {
         empty();
-        // emptyComma();
+        emptyComma();
         el1();
         el2();
         trailingComma();

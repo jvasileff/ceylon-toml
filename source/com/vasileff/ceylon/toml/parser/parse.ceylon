@@ -195,12 +195,12 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             acceptRun([comment, newline]);
             array.add(parseValue());
             acceptRun([comment, newline]);
+            // trailing comma ok
             if (!accept(comma)) {
                 break;
             }
             acceptRun([comment, newline]);
         }
-        accept(comma); // trailing comma ok
         acceptRun([comment, newline]);
         consume(closeBracket, "expected ']' to end the array");
         return array;
@@ -209,18 +209,18 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     TomlTable parseInlineTable() {
         value table = TomlTable();
         consume(openBrace, "expected '{' to start the inline table");
+        variable value first = true;
         lexer.inMode {
             LexerMode.key;
             void () {
-                while (!check(closeBrace)) {
-                    table.putAll { parseKeyValuePair() };
-                    if (!accept(comma)) {
-                        break;
+                if (!check(closeBrace)) {
+                    while (first || accept(comma)) {
+                        first = false;
+                        table.putAll { parseKeyValuePair() };
                     }
                 }
             };
         };
-        accept(comma); // trailing comma ok
         consume(closeBrace, "expected '}' to end the inline table");
         return table;
     }
