@@ -20,14 +20,26 @@ shared class Tokenizer({Character*} input,
 
     variable [ParseException*] errors = [];
 
-    shared ParseException error(String? description = null) {
+    "Create an error, but don't add it to the list of errors, yet."
+    shared ParseException createError(String? description = null) {
         // FIXME improve error handling!!!
         value sb = StringBuilder();
         sb.append(description else "lex error");
         sb.append(" at ``startLine``:``startColumn``");
         value exception = ParseException(null, sb.string);
-        errors = errors.withTrailing(exception);
         return exception;
+    }
+
+    shared ParseException error(String | ParseException? description = null) {
+        ParseException e;
+        if (is ParseException description) {
+            e = description;
+        }
+        else {
+            e = createError(description);
+        }
+        errors = errors.withTrailing(e);
+        return e;
     }
 
     shared Character? advance() {

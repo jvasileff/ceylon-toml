@@ -157,9 +157,18 @@ shared class Lexer({Character*} characters) {
                     }
                 }
                 else {
-                    // don't advance; reprocess character on next iteration
-                    t.error("invalid escape character");
-                    sb.appendCharacter('\\');
+                    value possibleError = t.createError("invalid escape character");
+
+                    // if followed by ws then newline, trim ws and newlines
+                    value whitespace = t.read(" \t\r");
+                    if (t.accept('\n')) {
+                        t.acceptRun(" \t\r\n");
+                    }
+                    else {
+                        t.error(possibleError);
+                        sb.appendCharacter('\\');
+                        sb.append(whitespace);
+                    }
                 }
             }
             else if (c == quoteChar) {
