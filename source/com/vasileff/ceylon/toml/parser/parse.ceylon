@@ -48,7 +48,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         if (exists token) {
             sb.append(" at ``token.line``:``token.column``");
         }
-        value exception = ParseException(token, sb.string);
+        value exception = ParseException(sb.string);
         errors = errors.withTrailing(exception);
         return exception;
     }

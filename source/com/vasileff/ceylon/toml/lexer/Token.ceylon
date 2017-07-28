@@ -1,7 +1,3 @@
-import com.vasileff.ceylon.toml.parser {
-    ParseException
-}
-
 shared class Token(type, text, position, line, column,
         errors, processedText = null) {
 

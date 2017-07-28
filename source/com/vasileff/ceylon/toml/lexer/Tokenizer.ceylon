@@ -1,7 +1,3 @@
-import com.vasileff.ceylon.toml.parser {
-    ParseException
-}
-
 shared class Tokenizer({Character*} input,
         Integer offsetPosition = 0,
         Integer offsetLine = 1,
@@ -26,7 +22,7 @@ shared class Tokenizer({Character*} input,
         value sb = StringBuilder();
         sb.append(description else "lex error");
         sb.append(" at ``startLine``:``startColumn``");
-        value exception = ParseException(null, sb.string);
+        value exception = ParseException(sb.string);
         return exception;
     }
 
