@@ -141,7 +141,7 @@ shared class Lexer({Character*} characters) {
                     value digits = t.read(isHexDigit, expected);
                     if (digits.size != expected) {
                         t.error("``expected`` hex digits expected but only \
-                                    found ``digits.size``");
+                                 found ``digits.size``", t.line, t.column);
                     }
                     else {
                         assert (is Integer int = Integer.parse(digits, 16));
@@ -149,12 +149,13 @@ shared class Lexer({Character*} characters) {
                             sb.appendCharacter(int.character);
                         }
                         catch (OverflowException e) {
-                            t.error("invalid codepoint");
+                            t.error("invalid codepoint", t.line, t.column - expected - 2);
                         }
                     }
                 }
                 else {
-                    value possibleError = t.createError("invalid escape character");
+                    value possibleError = t.createError(
+                            "invalid escape character", t.line, t.column);
 
                     // if followed by ws then newline, trim ws and newlines
                     value whitespace = t.read(" \t\r");
@@ -188,7 +189,7 @@ shared class Lexer({Character*} characters) {
                 }
             }
             else if (c < #20.character && !c in "\r\n") {
-                t.error("control character found");
+                t.error("control character", t.line, t.column);
                 t.advance();
                 sb.appendCharacter(#FFFD.character);
             }
@@ -202,9 +203,9 @@ shared class Lexer({Character*} characters) {
             }
         }
         if (lastWasSlash) {
-            t.error("string ended in '\\'");
+            t.error("string ended in '\\'", t.line, t.column);
         }
-        t.error("unterminated string");
+        t.error("unterminated string", t.line, t.column);
         return sb.string;
     }
 }

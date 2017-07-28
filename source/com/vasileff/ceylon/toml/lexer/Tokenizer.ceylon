@@ -7,8 +7,8 @@ shared class Tokenizer({Character*} input,
     value iterator = PeekingIterator(input.iterator());
 
     variable Integer position = offsetPosition;
-    variable Integer line = offsetLine;
-    variable Integer column = offsetColumn;
+    shared variable Integer line = offsetLine;
+    shared variable Integer column = offsetColumn;
 
     shared variable Integer startPosition = position;
     shared variable Integer startLine = line;
@@ -17,22 +17,28 @@ shared class Tokenizer({Character*} input,
     variable [ParseException*] errors = [];
 
     "Create an error, but don't add it to the list of errors, yet."
-    shared ParseException createError(String? description = null) {
+    shared ParseException createError(
+            String description,
+            Integer line = startLine,
+            Integer column = startColumn) {
         // FIXME improve error handling!!!
         value sb = StringBuilder();
-        sb.append(description else "lex error");
-        sb.append(" at ``startLine``:``startColumn``");
+        sb.append(description);
+        sb.append(" at ``line``:``column``");
         value exception = ParseException(sb.string);
         return exception;
     }
 
-    shared ParseException error(String | ParseException? description = null) {
+    shared ParseException error(
+            String | ParseException description,
+            Integer line = startLine,
+            Integer column = startColumn) {
         ParseException e;
         if (is ParseException description) {
             e = description;
         }
         else {
-            e = createError(description);
+            e = createError(description, line, column);
         }
         errors = errors.withTrailing(e);
         return e;
