@@ -109,6 +109,7 @@ shared class Tokenizer({Character*} input,
                 startPosition, startLine, startColumn,
                 errors, processedText);
         ignore();
+        errors = [];
         return result;
     }
 }
