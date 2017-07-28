@@ -125,10 +125,7 @@ shared class Lexer({Character*} characters) {
             t.accept('\n');
         }
         while (exists c = t.peek()) {
-            if (!multiLine && c in "\r\n") {
-                break;
-            }
-            else if (lastWasSlash) {
+            if (lastWasSlash) {
                 lastWasSlash = false;
                 switch (c)
                 case ('b') { t.advance(); sb.appendCharacter('\b'); }
@@ -170,6 +167,9 @@ shared class Lexer({Character*} characters) {
                         sb.append(whitespace);
                     }
                 }
+            }
+            else if (!multiLine && c in "\r\n") {
+                break;
             }
             else if (c == quoteChar) {
                 t.advance();
