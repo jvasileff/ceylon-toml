@@ -141,6 +141,27 @@ shared object mlBasicStrings {
         };
     }
 
+    shared test void escapeNewline() {
+        assertEquals {
+            parseToml("key = ``tq``val\\\nue``tq``");
+            map { "key" -> "value" };
+        };
+    }
+
+    shared test void escapeNewline2() {
+        assertEquals {
+            parseToml("key = ``tq``val\\\n\n\nue``tq``");
+            map { "key" -> "value" };
+        };
+    }
+
+    shared test void escapeNewlineSpaces() {
+        assertEquals {
+            parseToml("key = ``tq``val\\ \t \nue``tq``");
+            map { "key" -> "value" };
+        };
+    }
+
     shared void test() {
         empty();
         unterminated();
@@ -156,5 +177,8 @@ shared object mlBasicStrings {
         threeLine();
         threeLineEmptyLast();
         threeLineSkipFirst();
+        escapeNewline();
+        escapeNewline2();
+        escapeNewlineSpaces();
     }
 }

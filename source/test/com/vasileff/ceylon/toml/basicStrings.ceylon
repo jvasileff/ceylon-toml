@@ -115,6 +115,27 @@ shared object basicStrings {
         };
     }
 
+    shared test void escapeNewline() {
+        assertEquals {
+            parseToml("key = \"val\\\nue\"");
+            map { "key" -> "value" };
+        };
+    }
+
+    shared test void escapeNewline2() {
+        assertEquals {
+            parseToml("key = \"val\\\n\n\nue\"");
+            map { "key" -> "value" };
+        };
+    }
+
+    shared test void escapeNewlineSpaces() {
+        assertEquals {
+            parseToml("key = \"val\\ \t \nue\"");
+            map { "key" -> "value" };
+        };
+    }
+
     shared void test() {
         empty();
         unterminated();
@@ -126,5 +147,8 @@ shared object basicStrings {
         unicode4digitLengthErrors();
         unicode8digitLengthErrors();
         unicodeBadCodePoint();
+        escapeNewline();
+        escapeNewline2();
+        escapeNewlineSpaces();
     }
 }

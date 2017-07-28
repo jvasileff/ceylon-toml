@@ -65,6 +65,24 @@ shared object literalStrings {
         };
     }
 
+    shared test void dontEscapeNewline() {
+        assertTrue {
+            parseToml("key = 'val\\\nue'") is TomlParseException;
+        };
+    }
+
+    shared test void dontEscapeNewline2() {
+        assertTrue {
+            parseToml("key = 'val\\\n\n\nue'") is TomlParseException;
+        };
+    }
+
+    shared test void dontEscapeNewlineSpaces() {
+        assertTrue {
+            parseToml("key = 'val\\ \t \nue'") is TomlParseException;
+        };
+    }
+
     shared void test() {
         empty();
         unterminated();
@@ -73,5 +91,8 @@ shared object literalStrings {
         dontUnescapeError();
         ignoreUnicode4digit();
         ignoreUnicode8digit(); 
+        dontEscapeNewline();
+        dontEscapeNewline2();
+        dontEscapeNewlineSpaces();
     }
 }

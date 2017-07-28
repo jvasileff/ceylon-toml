@@ -93,6 +93,32 @@ shared object mlLiteralStrings {
         };
     }
 
+    shared test void dontEscapeNewline() {
+        assertEquals {
+            parseToml("key = '''val\\\nue'''");
+            map { "key" -> "val\\\nue" };
+        };
+    }
+
+    shared test void dontEscapeNewline2() {
+        assertEquals {
+            parseToml("key = '''val\\\n\n\nue'''");
+            map { "key" -> "val\\\n\n\nue" };
+        };
+    }
+
+    shared test void dontEscapeNewlineSpaces() {
+        // Tabs not allowed? See https://github.com/toml-lang/toml/issues/474
+        // assertEquals {
+        //     parseToml("key = '''val\\ \t \nue'''");
+        //     map { "key" -> "val\\ \t \nue" };
+        // };
+        assertEquals {
+            parseToml("key = '''val\\   \nue'''");
+            map { "key" -> "val\\   \nue" };
+        };
+    }
+
     shared void test() {
         empty();
         unterminated();
@@ -105,5 +131,8 @@ shared object mlLiteralStrings {
         threeLine();
         threeLineEmptyLast();
         threeLineSkipFirst();
+        dontEscapeNewline();
+        dontEscapeNewline2();
+        dontEscapeNewlineSpaces();
     }
 }
