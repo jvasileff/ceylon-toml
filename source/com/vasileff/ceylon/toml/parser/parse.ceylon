@@ -559,12 +559,8 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 return newTable;
             }
             else if (is TomlArray obj, is TomlTable last = obj.last) {
+                // for [whatever.key1.key2] following [[whatever.key1]]
                 // just add to the last table in the array
-
-                // TODO this seems kind of hokey. Is it ok if the table was an
-                //      inline table? Do we care if the source doc has elements
-                //      between the [[whatever.key]] and the [whatever.key.key]?
-                // TODO add tests
                 return last;    
             }
             else {
@@ -602,8 +598,8 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 return newTable;
             }
             else if (is TomlArray obj, is TomlTable last = obj.last) {
+                // for [[whatever.key1.key2]] following [[whatever.key1]]
                 // just add to the last table in the array
-                // TODO add tests
                 return last;
             }
             else {

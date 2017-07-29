@@ -1,8 +1,8 @@
 import ceylon.test {
-    test, assertEquals
+    test, assertEquals, assertTrue
 }
 import com.vasileff.ceylon.toml {
-    parseToml
+    parseToml, TomlParseException
 }
 
 shared object tables {
@@ -142,6 +142,81 @@ shared object tables {
         };
     }
 
+    shared test void addToTableInArray() {
+        assertEquals {
+            actual = parseToml {
+                 """
+                    [[k1.k2]]
+                    a = 1
+                    [k1.k2.k3]
+                    a = 2
+                 """;
+            };
+            expected = map {
+                "k1" -> map {
+                    "k2" -> [
+                        map {
+                            "a" -> 1,
+                            "k3" -> map {
+                                "a" -> 2
+                            }
+                        }
+                    ]
+                }
+            };
+        };
+    }
+
+    shared test void addToTableInArray2() {
+        assertEquals {
+            actual = parseToml {
+                 """
+                    [[k1.k2]]
+                    a = 1
+                    [k1.k2.k3]
+                    a = 2
+                    [[k1.k2]]
+                    a = 1
+                    [k1.k2.k3]
+                    a = 2
+                 """;
+            };
+            expected = map {
+                "k1" -> map {
+                    "k2" -> [
+                        map {
+                            "a" -> 1,
+                            "k3" -> map {
+                                "a" -> 2
+                            }
+                        },
+                        map {
+                            "a" -> 1,
+                            "k3" -> map {
+                                "a" -> 2
+                            }
+                        }
+                    ]
+                }
+            };
+        };
+    }
+
+    shared test void addToTableInArrayError() {
+        assertTrue {
+            parseToml {
+                 """
+                    [[k1.k2]]
+                    a = 1
+                    [k1.k2.k3]
+                    a = 2
+                    [k1.k2.k3] # key already exists
+                    a = 3
+                 """;
+            } is TomlParseException;
+        };
+    }
+
     shared void test() {
         empty();
         oneTable();
@@ -149,5 +224,8 @@ shared object tables {
         nestedTable();
         nestedTableSubFirst();
         nestedTable3Deep();
+        addToTableInArray();
+        addToTableInArray2();
+        addToTableInArrayError();
     }
 }

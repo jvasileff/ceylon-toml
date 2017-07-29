@@ -167,11 +167,124 @@ shared object arrayOfTables {
         };
     }
 
+    shared test void addToTableInArray() {
+        assertEquals {
+            actual = parseToml {
+                 """
+                    [[k1.k2]]
+                    a = 1
+                    [[k1.k2.k3]]
+                    a = 2
+                 """;
+            };
+            expected = map {
+                "k1" -> map {
+                    "k2" -> [
+                        map {
+                            "a" -> 1,
+                            "k3" -> [
+                                map {
+                                    "a" -> 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            };
+        };
+    }
+
+    shared test void addToTableInArray2() {
+        assertEquals {
+            actual = parseToml {
+                 """
+                    [[k1.k2]]
+                    a = 1
+                    [[k1.k2.k3]]
+                    a = 2
+                    [[k1.k2]]
+                    a = 3
+                    [[k1.k2.k3]]
+                    a = 4
+                 """;
+            };
+            expected = map {
+                "k1" -> map {
+                    "k2" -> [
+                        map {
+                            "a" -> 1,
+                            "k3" -> [
+                                map {
+                                    "a" -> 2
+                                }
+                            ]
+                        },
+                        map {
+                            "a" -> 3,
+                            "k3" -> [
+                                map {
+                                    "a" -> 4
+                                }
+                            ]
+                        }
+                    ]
+                }
+            };
+        };
+    }
+
+    shared test void addToTableInArray22() {
+        assertEquals {
+            actual = parseToml {
+                 """
+                    [[k1.k2]]
+                    a = 1
+                    [[k1.k2.k3]]
+                    a = 2
+                    [[k1.k2]]
+                    a = 3
+                    [[k1.k2.k3]]
+                    a = 4
+                    [[k1.k2.k3]]
+                    a = 5
+                 """;
+            };
+            expected = map {
+                "k1" -> map {
+                    "k2" -> [
+                        map {
+                            "a" -> 1,
+                            "k3" -> [
+                                map {
+                                    "a" -> 2
+                                }
+                            ]
+                        },
+                        map {
+                            "a" -> 3,
+                            "k3" -> [
+                                map {
+                                    "a" -> 4
+                                },
+                                map {
+                                    "a" -> 5
+                                }
+                            ]
+                        }
+                    ]
+                }
+            };
+        };
+    }
+
     shared void test() {
         empty();
         notEmpty();
         twoArraysMixedOrder();
         nested();
         nestedArrayFirst();
+        addToTableInArray();
+        addToTableInArray2();
+        addToTableInArray22();
     }
 }
