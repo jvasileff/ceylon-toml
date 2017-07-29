@@ -51,7 +51,7 @@
     [[TomlTable]]:
 
     ```ceylon
-    import com.vasileff.ceylon.toml {
+    import ceylon.toml {
         parseToml, TomlTable, TomlParseException
     }
     import ceylon.time.timezone {
@@ -129,7 +129,7 @@
     The following program can be used to parse a document and report all errors, if any:
 
     ```ceylon
-    import com.vasileff.ceylon.toml {
+    import ceylon.toml {
         parseToml, TomlTable, TomlParseException
     }
 
@@ -160,7 +160,7 @@
         import ceylon.time.timezone {
             zoneDateTime, timeZone
         }
-        import com.vasileff.ceylon.toml {
+        import ceylon.toml {
             TomlTable, TomlArray
         }
 
