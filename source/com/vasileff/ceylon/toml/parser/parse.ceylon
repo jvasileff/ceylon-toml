@@ -125,7 +125,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 lexer.inMode(LexerMode.key, parseLine);
             }
             catch (ParseException e) {
-                acceptRun(not('\n'.equals));
+                acceptRun(not(newline.equals));
             }
         }
         return [result, *errors];
