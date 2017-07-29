@@ -617,7 +617,6 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         TomlArray array;
         switch (obj = container.get(path.last))
         case (is TomlArray) {
-            // TODO do we care how this array was defined? Track '[[' arrays vs. inline?
             array = obj;
         }
         case (is Null) {
