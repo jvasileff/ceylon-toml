@@ -30,9 +30,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             else if (token.text.shorterThan(10)) then "'``token.text``'"
             else "'``token.text[...10]``...'";
 
-    ParseException error(Token? token, String? description = null) {
-        // TODO this is no good for errors like:
-        // error: unexpected '['; table [first-Table] has already been defined at 75:1
+    ParseException badTokenError(Token? token, String? description = null) {
         value sb = StringBuilder();
         sb.append("unexpected ");
         if (!exists token) {
@@ -49,6 +47,14 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             sb.append(" at ``token.line``:``token.column``");
         }
         value exception = ParseException(sb.string);
+        errors = errors.withTrailing(exception);
+        return exception;
+    }
+
+    ParseException error(Token token, String description) {
+        value exception = ParseException {
+            "``description`` at ``token.line``:``token.column``";
+        };
         errors = errors.withTrailing(exception);
         return exception;
     }
@@ -106,7 +112,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         if (exists token = advance(type)) {
             return token;
         }
-        throw error(peek(), errorDescription);
+        throw badTokenError(peek(), errorDescription);
     }
 
     "Return true if there is no next token."
@@ -182,7 +188,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         case (basicString) { return parseBasicString(); }
         case (literalString) { return parseLiteralString(); }
         else {
-            throw error(peek(), "expected a key");
+            throw badTokenError(peek(), "expected a key");
         }
     }
 
@@ -287,7 +293,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 return i;
             }
             else {
-                throw error(firstToken, i.message);
+                throw badTokenError(firstToken, i.message);
             }
         }
         else {
@@ -300,7 +306,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 return f;
             }
             else {
-                throw error(firstToken, f.message);
+                throw badTokenError(firstToken, f.message);
             }
         }
     }
@@ -310,11 +316,11 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             Range<Integer>? range = null, String? errorRange = null) {
         value t = token else consume(digits, errorCount);
         if (t.text.size != count) {
-            throw error(t, errorCount);
+            throw badTokenError(t, errorCount);
         }
         assert (is Integer result = Integer.parse(t.text));
         if (exists range, !result in range) {
-            throw error(t, errorRange);
+            throw badTokenError(t, errorRange);
         }
         return result;
     }
@@ -467,7 +473,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         case (falseKeyword) { advance(); return false; }
         case (plus | minus | digits) { return parseNumberOrDate(); }
         else {
-            throw error(peek(), "expected a toml value");
+            throw badTokenError(peek(), "expected a toml value");
         }
     }
 
@@ -483,10 +489,10 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     [String*] parseKeyPath() {
         switch (p = peek())
         case (null) {
-            throw error(null, "expected a key");
+            throw badTokenError(null, "expected a key");
         }
         else if (p.type == period) {
-            throw error(p, "table name may not start with '.'");
+            throw badTokenError(p, "table name may not start with '.'");
         }
 
         variable {String*} result = [];
@@ -497,14 +503,14 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             lastPart = part;
 
             if (lastWasDot && part.type == period) {
-                throw error(part, "consecutive '.'s may not exist between keys");
+                throw badTokenError(part, "consecutive '.'s may not exist between keys");
             }
             else if (part.type == period) {
                 lastWasDot = true;
             }
             else {
                 if (!lastWasDot) {
-                    throw error(part, "keys must be separated by '.'");
+                    throw badTokenError(part, "keys must be separated by '.'");
                 }
                 lastWasDot = false;
                 switch (part.type)
@@ -517,13 +523,13 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                     result = result.follow(text);
                 }
                 else {
-                    throw error(part, "invalid key");
+                    throw badTokenError(part, "invalid key");
                 }
             }
         }
 
         if (lastWasDot) {
-            throw error(lastPart, "table name may not end with '.'");
+            throw badTokenError(lastPart, "table name may not end with '.'");
         }
 
         return result.sequence().reversed;
@@ -533,7 +539,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         value openToken = consume(openBracket, "expected '['");
         value path = lexer.inMode(LexerMode.key, parseKeyPath);
         if (!nonempty path) {
-            throw error(openToken, "table name must not be empty");
+            throw badTokenError(openToken, "table name must not be empty");
         }
         currentTable = path.fold(this.result)((table, pathPart) {
             switch (obj = table.get(pathPart))
@@ -557,12 +563,13 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 }
                 currentTable = TomlTable(); // ignore subsequent key/value pairs
                 // TODO actually provide the leading key path... (can't use fold)
-                throw error(openToken, "a value already exists for the given key");
+                throw badTokenError(openToken,
+                        "a value already exists for the given key");
             }
         });
         if (!createdButNotDefined.remove(currentTable)) {
             // TODO format path, once we have a serializer
-            throw error(openToken, "table ``path`` has already been defined");
+            throw badTokenError(openToken, "table ``path`` has already been defined");
         }
         consume(closeBracket, "expected ']'");
     }
@@ -571,7 +578,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         value openToken = consume(doubleOpenBracket, "expected '[['");
         value path = lexer.inMode(LexerMode.key, parseKeyPath);
         if (!nonempty path) {
-            throw error(openToken, "table name must not be empty");
+            throw badTokenError(openToken, "table name must not be empty");
         }
         value container = path.exceptLast.fold(this.result)((table, pathPart) {
             switch (obj = table.get(pathPart))
@@ -592,7 +599,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 }
                 currentTable = TomlTable(); // ignore subsequent key/value pairs
                 // TODO actually provide the leading key path... (can't use fold)
-                throw error(openToken, "a value already exists for the given key");
+                throw badTokenError(openToken, "a value already exists for the given key");
             }
         });
         TomlArray array;
@@ -606,7 +613,8 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             container.put(path.last, array);
         }
         else {
-            throw error(openToken, "a non-array value already exists for the given key");
+            throw badTokenError(openToken,
+                    "a non-array value already exists for the given key");
         }
 
         currentTable = TomlTable();
@@ -626,26 +634,27 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             currentTable.putAll { parseKeyValuePair() };
             accept(comment);
             if (!endOfFile && !accept(newline)) {
-                throw error(peek(), "expected a newline or eof after key/value pair");
+                throw badTokenError(peek(), "expected a newline or eof after key/value pair");
             }
         }
         case (openBracket) {
             parseTable();
             accept(comment);
             if (!endOfFile && !accept(newline)) {
-                throw error(peek(), "expected a newline or eof after table header");
+                throw badTokenError(peek(),
+                        "expected a newline or eof after table header");
             }
         }
         case (doubleOpenBracket) {
             parseArrayOfTables();
             accept(comment);
             if (!endOfFile && !accept(newline)) {
-                throw error(peek(),
+                throw badTokenError(peek(),
                         "expected a newline or eof after array of tables header");
             }
         }
         else {
-            throw error(peek());
+            throw badTokenError(peek());
         }
     }
 
@@ -656,7 +665,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 || c in '0'..'9'
                 || c == '_' || c == '-'; 
         if (!key.every(validChar)) {
-            throw error {
+            throw badTokenError {
                 token;
                 "bare keys may only contain the characters \
                  'A-Z', 'a-z', '0-9', '_', and '-'";
