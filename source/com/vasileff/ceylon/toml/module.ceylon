@@ -149,7 +149,7 @@
 
     # Generating TOML Documents
 
-    [[generateToml]] can be used to generate a TOML document from a [[TomlTable]] or a
+    [[formatToml]] can be used to generate a TOML document from a [[TomlTable]] or a
     `Map<Anything, Anything>`. In either case, the argument must represent a valid TOML
     document, with [[String]]s for keys and [[TomlValue]]s, ``Map``s, or ``List``s for
     values.
@@ -184,7 +184,7 @@
                     "alpha", "omega"
                 }
             };
-            ...
+            print(formatToml(document));
         }
      ```
  """

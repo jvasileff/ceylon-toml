@@ -2,7 +2,7 @@ import ceylon.test {
     test, assertEquals
 }
 import com.vasileff.ceylon.toml {
-    parseToml, generateToml, TomlParseException
+    parseToml, formatToml, TomlParseException
 }
 import ceylon.json {
     parseJson = parse,
@@ -31,7 +31,7 @@ object tomlDistTests {
                         ?.textContent("UTF-8"));
 
         assert (!is TomlParseException toml = parseToml(tomlText));
-        value tomlText2 = generateToml(toml);
+        value tomlText2 = formatToml(toml);
         assert (!is TomlParseException toml2 = parseToml(tomlText2));
         assertEquals(toml, toml2);
     }
