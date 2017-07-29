@@ -11,8 +11,8 @@ import ceylon.time.timezone {
 "Generate a TOML document from the given `Map`. For added type safety, it is recommended
  that the argument be a [[TomlTable]], although any `Map` with valid content can be used.
 
- Note that all keys must be [[String]]s, and all values must be [[TomlValue]]s. No type
- coercion is performed by this function."
+ Note that all keys must be [[String]]s, and all values must be [[TomlValue]]s, [[Map]]s,
+ or [[List]]s. No type coercion is performed by this function."
 throws(`class AssertionError`, "if the argument represents an invalid TOML document")
 shared String formatToml(Map<String, Object> tomlTable)
         => object satisfies Producer<String> {
