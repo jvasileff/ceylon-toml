@@ -27,7 +27,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
     String formatToken(Token token)
         =>  if (token.type == newline) then "newline"
             else if (token.type == newline) then "eof"
-            else if (token.text.shorterThan(10)) then "'``token.text``'"
+            else if (token.text.shorterThan(10)) then "token '``token.text``'"
             else "'``token.text[...10]``...'";
 
     ParseException badTokenError(Token? token, String? description = null) {
@@ -40,7 +40,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             sb.append(formatToken(token));
         }
         if (exists description) {
-            sb.append("; ");
+            sb.append(": ");
             sb.append(description);
         }
         if (exists token) {
@@ -51,9 +51,11 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         return exception;
     }
 
-    ParseException error(Token token, String description) {
+    ParseException error(Token? token, String description) {
         value exception = ParseException {
-            "``description`` at ``token.line``:``token.column``";
+            if (exists token)
+            then  "``description`` at ``token.line``:``token.column``"
+            else description;
         };
         errors = errors.withTrailing(exception);
         return exception;
@@ -196,7 +198,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         // TODO disallow heterogenous arrays
         //      (have parseValue return a type descriptor?)
         value array = TomlArray();
-        consume(openBracket, "expected '[' to start the array");
+        consume(openBracket, "expected '[' to start an array");
         while (!check(closeBracket)) {
             acceptRun([comment, newline]);
             array.add(parseValue());
@@ -214,7 +216,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
 
     TomlTable parseInlineTable() {
         value table = TomlTable();
-        consume(openBrace, "expected '{' to start the inline table");
+        consume(openBrace, "expected '{' to start an inline table");
         variable value first = true;
         lexer.inMode {
             LexerMode.key;
@@ -293,7 +295,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 return i;
             }
             else {
-                throw badTokenError(firstToken, i.message);
+                throw badTokenError(firstToken, "unparsable integer: ``i.message``");
             }
         }
         else {
@@ -306,7 +308,7 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
                 return f;
             }
             else {
-                throw badTokenError(firstToken, f.message);
+                throw badTokenError(firstToken,  "unparsable float: ``f.message``");
             }
         }
     }
@@ -494,6 +496,9 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
         else if (p.type == period) {
             throw badTokenError(p, "table name may not start with '.'");
         }
+        else if (!p.type in [bareKey, basicString, literalString]) {
+            throw badTokenError(p, "expected a key");
+        }
 
         variable {String*} result = [];
         variable value lastWasDot = true;
@@ -634,7 +639,8 @@ shared [TomlTable, ParseException*] parse({Character*} input) =>
             currentTable.putAll { parseKeyValuePair() };
             accept(comment);
             if (!endOfFile && !accept(newline)) {
-                throw badTokenError(peek(), "expected a newline or eof after key/value pair");
+                throw badTokenError(peek(),
+                        "expected a newline or eof after key/value pair");
             }
         }
         case (openBracket) {
